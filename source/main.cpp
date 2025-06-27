@@ -1,6 +1,8 @@
 /*
-   TODO(matthew):
+   NOTE(matthew): Completed
    - Edge fill-rule
+
+   TODO(matthew):
    - Incremental edge function computation
    - 4-wide SIMD (SSE)
    - 8-wide SIMD (AVX)
@@ -30,6 +32,7 @@ struct triangle
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 s32 				Orient2D(v2i A, v2i B, v2i C);
 v2i					NdcToRaster(v2 Point);
+b32  				FillRule(v2i Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
 
 int
@@ -126,7 +129,7 @@ main(void)
 	return 0;
 }
 
-void 				
+void
 RasterizeTriangle(bitmap *Bitmap,
 				  triangle Triangle)
 {
@@ -158,6 +161,10 @@ RasterizeTriangle(bitmap *Bitmap,
 			s32 W0 = Orient2D(V1, V2, Pixel);
 			s32 W1 = Orient2D(V2, V0, Pixel);
 			s32 W2 = Orient2D(V0, V1, Pixel);
+
+			if (FillRule(V2 - V1))	W0 -= 1;
+			if (FillRule(V0 - V2))	W1 -= 1;
+			if (FillRule(V1 - V0))	W2 -= 1;
 
 			if ((W0 | W1 | W2) >= 0)
 			{
@@ -229,5 +236,14 @@ NdcToRaster(v2 Point)
 	Pixel.y = s32((Point.y + 1.0f) * 0.5 * SCR_HEIGHT);
 
 	return (Pixel);
+}
+
+b32
+FillRule(v2i Edge)
+{
+	b32 IsTopLeft = Edge.y > 0;
+	b32 IsTopEdge = (Edge.y == 0) && (Edge.x < 0);
+
+	return (IsTopLeft || IsTopEdge);
 }
 
