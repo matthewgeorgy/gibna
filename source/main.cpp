@@ -20,8 +20,16 @@
 #define SCR_WIDTH 	1024
 #define SCR_HEIGHT 	768
 
+struct triangle
+{
+	v2		V0,
+			V1,
+			V2;
+};
+
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 s32 				Orient2D(v2i A, v2i B, v2i C);
+v2i					NdcToRaster(v2 Point);
 
 int
 main(void)
@@ -81,13 +89,18 @@ main(void)
 	///////////////////////////////////
 	// Triangle
 
-	s32		MinX, MaxX,
-			MinY, MaxY;
+	s32				MinX, MaxX,
+					MinY, MaxY;
+	triangle		Triangle;
 
 	// Vertices
-	v2i V0 = v2i(100, 300);
-	v2i V1 = v2i(400, 300);
-	v2i V2 = v2i(100, 500);
+	Triangle.V0 = v2(-0.5f, -0.5f);
+	Triangle.V1 = v2( 0.5f, -0.5f);
+	Triangle.V2 = v2( 0.0f,  0.5f);
+
+	v2i V0 = NdcToRaster(Triangle.V0);
+	v2i V1 = NdcToRaster(Triangle.V1);
+	v2i V2 = NdcToRaster(Triangle.V2);
 
 	// Triangle bounding box
 	MinX = Min(Min(V0.x, V1.x), V2.x);
@@ -198,5 +211,17 @@ Orient2D(v2i A,
 	Det = (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x);
 
 	return (Det);
+}
+
+v2i
+NdcToRaster(v2 Point)
+{
+	v2i		Pixel;
+
+
+	Pixel.x = s32((Point.x + 1.0f) * 0.5 * SCR_WIDTH);
+	Pixel.y = s32((Point.y + 1.0f) * 0.5 * SCR_HEIGHT);
+
+	return (Pixel);
 }
 
