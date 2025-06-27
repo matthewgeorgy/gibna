@@ -30,6 +30,7 @@ struct triangle
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 s32 				Orient2D(v2i A, v2i B, v2i C);
 v2i					NdcToRaster(v2 Point);
+void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
 
 int
 main(void)
@@ -89,14 +90,48 @@ main(void)
 	///////////////////////////////////
 	// Triangle
 
-	s32				MinX, MaxX,
-					MinY, MaxY;
 	triangle		Triangle;
 
 	// Vertices
 	Triangle.V0 = v2(-0.5f, -0.5f);
 	Triangle.V1 = v2( 0.5f, -0.5f);
 	Triangle.V2 = v2( 0.0f,  0.5f);
+
+	RasterizeTriangle(&Bitmap, Triangle);
+
+	PresentBitmap(Bitmap);
+
+	///////////////////////////////////
+	// Main loop
+
+	MSG		Message;
+
+
+	for (;;)
+	{
+		if (PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
+		{
+			if (Message.message == WM_QUIT)
+			{
+				break;
+			}
+			TranslateMessage(&Message);
+			DispatchMessage(&Message);
+		}
+		else
+		{
+		}
+	}
+
+	return 0;
+}
+
+void 				
+RasterizeTriangle(bitmap *Bitmap,
+				  triangle Triangle)
+{
+	s32				MinX, MaxX,
+					MinY, MaxY;
 
 	v2i V0 = NdcToRaster(Triangle.V0);
 	v2i V1 = NdcToRaster(Triangle.V1);
@@ -126,41 +161,12 @@ main(void)
 
 			if ((W0 | W1 | W2) >= 0)
 			{
-				s32 PixelCoord = (X + Y * Bitmap.Width) * BYTES_PER_PIXEL;
+				color_u8 Color = { 0, 255, 0 };
 
-				Bitmap.Memory[PixelCoord + 0] = 0;
-				Bitmap.Memory[PixelCoord + 1] = 255;
-				Bitmap.Memory[PixelCoord + 2] = 0;
-				Bitmap.Memory[PixelCoord + 3] = 0;
+				SetPixel(Bitmap, X, Y, Color);
 			}
 		}
 	}
-
-	PresentBitmap(Bitmap);
-
-	///////////////////////////////////
-	// Main loop
-
-	MSG		Message;
-
-
-	for (;;)
-	{
-		if (PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
-		{
-			if (Message.message == WM_QUIT)
-			{
-				break;
-			}
-			TranslateMessage(&Message);
-			DispatchMessage(&Message);
-		}
-		else
-		{
-		}
-	}
-
-	return 0;
 }
 
 LRESULT CALLBACK

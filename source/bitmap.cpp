@@ -32,3 +32,17 @@ PresentBitmap(bitmap Bitmap)
 		Bitmap.Memory, &Bitmap.Info, DIB_RGB_COLORS, SRCCOPY);
 }
 
+void 		
+SetPixel(bitmap *Bitmap,
+		 s32 X, 
+		 s32 Y, 
+		 color_u8 Color)
+{
+	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+
+	Bitmap->Memory[PixelCoord + 0] = Color.b;
+	Bitmap->Memory[PixelCoord + 1] = Color.g;
+	Bitmap->Memory[PixelCoord + 2] = Color.r;
+	Bitmap->Memory[PixelCoord + 3] = 0;
+}
+

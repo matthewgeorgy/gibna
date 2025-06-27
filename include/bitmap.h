@@ -15,8 +15,16 @@ struct bitmap
 	HDC			DC;
 };
 
+struct color_u8
+{
+	u8		r,
+			g,
+			b;
+};
+
 void		AllocateBitmap(bitmap *Bitmap, HWND Window, s32 Width, s32 Height);
 void 		PresentBitmap(bitmap Bitmap);
+void 		SetPixel(bitmap *Bitmap, s32 X, s32 Y, color_u8 Color);
 
 #endif // __BITMAP_H__
 
