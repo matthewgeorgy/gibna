@@ -1,0 +1,34 @@
+#include <bitmap.h>
+
+void		
+AllocateBitmap(bitmap *Bitmap, 
+			   HWND Window, 
+			   s32 Width, 
+			   s32 Height)
+{
+	u32		BitmapMemorySize = Width * Height * BYTES_PER_PIXEL;
+
+
+	Bitmap->Width = Width;
+	Bitmap->Height = Height;
+	Bitmap->Window = Window;
+	Bitmap->DC = GetDC(Window);
+	Bitmap->Memory = (u8 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
+
+	Bitmap->Info.bmiHeader.biSize = sizeof(Bitmap->Info.bmiHeader);
+	Bitmap->Info.bmiHeader.biWidth = Bitmap->Width;
+	Bitmap->Info.bmiHeader.biHeight = Bitmap->Height; // NOTE(matthew): bottom->up bitmap
+	Bitmap->Info.bmiHeader.biPlanes = 1;
+	Bitmap->Info.bmiHeader.biBitCount = 32;
+	Bitmap->Info.bmiHeader.biCompression = BI_RGB;
+}
+
+void 		
+PresentBitmap(bitmap Bitmap)
+{
+	StretchDIBits(Bitmap.DC,
+		0, 0, Bitmap.Width, Bitmap.Height,
+		0, 0, Bitmap.Width, Bitmap.Height,
+		Bitmap.Memory, &Bitmap.Info, DIB_RGB_COLORS, SRCCOPY);
+}
+

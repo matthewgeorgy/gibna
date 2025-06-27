@@ -1,21 +1,12 @@
+#include <stdio.h>
+
 #define MG_IMPL
 #include <mg.h>
-#include <stdio.h>
+#include <bitmap.h>
 
 #define SCR_WIDTH 	1024
 #define SCR_HEIGHT 	768
-#define BYTES_PER_PIXEL		4
 #define BITMAP_MEMORY_SIZE	(SCR_WIDTH * SCR_HEIGHT * BYTES_PER_PIXEL)
-
-struct bitmap
-{
-	BITMAPINFO	Info;
-	u8			*Memory;
-	s32 		Width,
-				Height;
-	HWND 		Window;
-	HDC			DC;
-};
 
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -72,18 +63,7 @@ main(void)
 	bitmap Bitmap;
 
 
-	Bitmap.Width = SCR_WIDTH;
-	Bitmap.Height = SCR_HEIGHT;
-	Bitmap.Window = Window;
-	Bitmap.DC = GetDC(Window);
-	Bitmap.Memory = (u8 *)HeapAlloc(GetProcessHeap(), 0, BITMAP_MEMORY_SIZE);
-
-	Bitmap.Info.bmiHeader.biSize = sizeof(Bitmap.Info.bmiHeader);
-	Bitmap.Info.bmiHeader.biWidth = Bitmap.Width;
-	Bitmap.Info.bmiHeader.biHeight = Bitmap.Height; // NOTE(matthew): bottom->up bitmap
-	Bitmap.Info.bmiHeader.biPlanes = 1;
-	Bitmap.Info.bmiHeader.biBitCount = 32;
-	Bitmap.Info.bmiHeader.biCompression = BI_RGB;
+	AllocateBitmap(&Bitmap, Window, SCR_WIDTH, SCR_HEIGHT);
 
 	for (s32 Y = 0; Y < Bitmap.Height; Y += 1)
 	{
@@ -98,10 +78,7 @@ main(void)
 		}
 	}
 
-	StretchDIBits(Bitmap.DC,
-			0, 0, Bitmap.Width, Bitmap.Height,
-			0, 0, Bitmap.Width, Bitmap.Height,
-			Bitmap.Memory, &Bitmap.Info, DIB_RGB_COLORS, SRCCOPY);
+	PresentBitmap(Bitmap);
 
 	///////////////////////////////////
 	// Main loop
