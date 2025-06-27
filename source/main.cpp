@@ -1,3 +1,16 @@
+/*
+   TODO(matthew):
+   - Edge fill-rule
+   - Incremental edge function computation
+   - 4-wide SIMD (SSE)
+   - 8-wide SIMD (AVX)
+   - Full transform (WVP + perspective + 1/z) pipeline
+   - Subpixel precision
+   - Depth buffering
+   - Perspective-correct interpolation
+   - Clipping
+*/
+
 #include <stdio.h>
 
 #define MG_IMPL
@@ -6,9 +19,8 @@
 
 #define SCR_WIDTH 	1024
 #define SCR_HEIGHT 	768
-#define BITMAP_MEMORY_SIZE	(SCR_WIDTH * SCR_HEIGHT * BYTES_PER_PIXEL)
 
-LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 s32 				Orient2D(v2i A, v2i B, v2i C);
 
 int
