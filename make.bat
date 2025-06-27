@@ -6,7 +6,7 @@ set CPP_SOURCE=..\source\*.cpp
 
 pushd build\
 
-cl %CPP_FLAGS% %CPP_SOURCE% user32.lib
+cl %CPP_FLAGS% %CPP_SOURCE% user32.lib gdi32.lib
 
 popd
 
