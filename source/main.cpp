@@ -9,6 +9,7 @@
 #define BITMAP_MEMORY_SIZE	(SCR_WIDTH * SCR_HEIGHT * BYTES_PER_PIXEL)
 
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
+s32 				Orient2D(v2i A, v2i B, v2i C);
 
 int
 main(void)
@@ -65,16 +66,48 @@ main(void)
 
 	AllocateBitmap(&Bitmap, Window, SCR_WIDTH, SCR_HEIGHT);
 
-	for (s32 Y = 0; Y < Bitmap.Height; Y += 1)
-	{
-		for (s32 X = 0; X < Bitmap.Width; X += 1)
-		{
-			s32 PixelCoord = (X + Y * Bitmap.Width) * BYTES_PER_PIXEL;
+	///////////////////////////////////
+	// Triangle
 
-			Bitmap.Memory[PixelCoord + 0] = 255;
-			Bitmap.Memory[PixelCoord + 1] = 0;
-			Bitmap.Memory[PixelCoord + 2] = 0;
-			Bitmap.Memory[PixelCoord + 3] = 0;
+	s32		MinX, MaxX,
+			MinY, MaxY;
+
+	// Vertices
+	v2i V0 = v2i(100, 300);
+	v2i V1 = v2i(400, 300);
+	v2i V2 = v2i(100, 500);
+
+	// Triangle bounding box
+	MinX = Min(Min(V0.x, V1.x), V2.x);
+	MaxX = Max(Max(V0.x, V1.x), V2.x);
+	MinY = Min(Min(V0.y, V1.y), V2.y);
+	MaxY = Max(Max(V0.y, V1.y), V2.y);
+
+	// Screen clipping
+	MinX = Max(MinX, 0);
+	MaxX = Min(MaxX, SCR_WIDTH);
+	MinY = Max(MinY, 0);
+	MaxY = Min(MaxY, SCR_HEIGHT);
+
+	for (s32 Y = MinY; Y < MaxY; Y += 1)
+	{
+		for (s32 X = MinX; X < MaxX; X += 1)
+		{
+			v2i Pixel = v2i(X, Y);
+
+			s32 W0 = Orient2D(V1, V2, Pixel);
+			s32 W1 = Orient2D(V2, V0, Pixel);
+			s32 W2 = Orient2D(V0, V1, Pixel);
+
+			if ((W0 | W1 | W2) >= 0)
+			{
+				s32 PixelCoord = (X + Y * Bitmap.Width) * BYTES_PER_PIXEL;
+
+				Bitmap.Memory[PixelCoord + 0] = 0;
+				Bitmap.Memory[PixelCoord + 1] = 255;
+				Bitmap.Memory[PixelCoord + 2] = 0;
+				Bitmap.Memory[PixelCoord + 3] = 0;
+			}
 		}
 	}
 
@@ -140,5 +173,18 @@ WndProc(HWND hWnd,
 	}
 
 	return (Result);
+}
+
+s32
+Orient2D(v2i A,
+		 v2i B,
+		 v2i C)
+{
+	s32		Det;
+
+
+	Det = (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x);
+
+	return (Det);
 }
 
