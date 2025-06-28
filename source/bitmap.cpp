@@ -46,3 +46,9 @@ SetPixel(bitmap *Bitmap,
 	Bitmap->Memory[PixelCoord + 3] = 0;
 }
 
+void 		
+ClearBitmap(bitmap *Bitmap)
+{
+	ZeroMemory(Bitmap->Memory, Bitmap->Width * Bitmap->Height * BYTES_PER_PIXEL);
+}
+

@@ -22,6 +22,7 @@ struct color_u8
 			b;
 };
 
+void 		ClearBitmap(bitmap *Bitmap);
 void		AllocateBitmap(bitmap *Bitmap, HWND Window, s32 Width, s32 Height);
 void 		PresentBitmap(bitmap Bitmap);
 void 		SetPixel(bitmap *Bitmap, s32 X, s32 Y, color_u8 Color);

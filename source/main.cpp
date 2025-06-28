@@ -91,23 +91,17 @@ main(void)
 	AllocateBitmap(&Bitmap, Window, SCR_WIDTH, SCR_HEIGHT);
 
 	///////////////////////////////////
-	// Triangle
-
-	triangle		Triangle;
-
 	// Vertices
-	Triangle.V0 = v2(-0.5f, -0.5f);
-	Triangle.V1 = v2( 0.5f, -0.5f);
-	Triangle.V2 = v2( 0.0f,  0.5f);
 
-	RasterizeTriangle(&Bitmap, Triangle);
-
-	PresentBitmap(Bitmap);
+	v2 V0 = v2(-0.5f, -0.5f);
+	v2 V1 = v2( 0.5f, -0.5f);
+	v2 V2 = v2( 0.0f,  0.5f);
 
 	///////////////////////////////////
 	// Main loop
 
 	MSG		Message;
+	f32 	Angle = 0;
 
 
 	for (;;)
@@ -123,6 +117,25 @@ main(void)
 		}
 		else
 		{
+			ClearBitmap(&Bitmap);
+
+			f32 CosAngle = Cos(Angle);
+			f32 SinAngle = Sin(Angle);
+
+			triangle Triangle;
+
+			Triangle.V0.x = V0.x * CosAngle - V0.y * SinAngle;
+			Triangle.V0.y = V0.x * SinAngle + V0.y * CosAngle;
+			Triangle.V1.x = V1.x * CosAngle - V1.y * SinAngle;
+			Triangle.V1.y = V1.x * SinAngle + V1.y * CosAngle;
+			Triangle.V2.x = V2.x * CosAngle - V2.y * SinAngle;
+			Triangle.V2.y = V2.x * SinAngle + V2.y * CosAngle;
+
+			RasterizeTriangle(&Bitmap, Triangle);
+
+			PresentBitmap(Bitmap);
+
+			Angle += 0.01f;
 		}
 	}
 
