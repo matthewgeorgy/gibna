@@ -195,7 +195,16 @@ RasterizeTriangle(bitmap *Bitmap,
 		{
 			if ((W0 | W1 | W2) >= 0)
 			{
-				color_u8 Color = { 0, 255, 0 };
+				s32 Sum = (W0 + W1 + W2) >> FP_SHIFT;
+				v3 Weights = v3(f32(W0 >> FP_SHIFT) / f32(Sum),
+								f32(W1 >> FP_SHIFT) / f32(Sum),
+								f32(W2 >> FP_SHIFT) / f32(Sum));
+
+				u8 Red = u8(255.999f * Weights.x);
+				u8 Green = u8(255.999f * Weights.y);
+				u8 Blue = u8(255.999f * Weights.z);
+
+				color_u8 Color = { Red, Green, Blue };
 
 				SetPixel(Bitmap, X, Y, Color);
 			}
