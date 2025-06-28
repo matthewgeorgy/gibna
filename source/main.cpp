@@ -3,9 +3,9 @@
    - Edge fill-rule
    - Subpixel precision
    - Incremental edge function computation
+   - 4-wide SIMD (SSE)
 
    TODO(matthew):
-   - 4-wide SIMD (SSE)
    - 8-wide SIMD (AVX)
    - Full transform (WVP + perspective + 1/z) pipeline
    - Depth buffering
@@ -19,6 +19,7 @@
 #include <mg.h>
 #include <bitmap.h>
 #include <fixed_point.h>
+#include <simd.h>
 
 #define SCR_WIDTH 	1024
 #define SCR_HEIGHT 	768
@@ -30,11 +31,23 @@ struct triangle
 			V2;
 };
 
+struct edge
+{
+	static const s32 StepSizeX = 4;
+	static const s32 StepSizeY = 1;
+
+	wide_s32 OneStepX;
+	wide_s32 OneStepY;
+
+	wide_s32 Init(const v2_fp &V0, const v2_fp &V1, const v2_fp &P);
+};
+
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
+void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 Mask);
 
 int
 main(void)
@@ -172,51 +185,42 @@ RasterizeTriangle(bitmap *Bitmap,
 
 	// Initial edge function values
 	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
-	s32_fp W0Row = Orient2D(V1, V2, Pixel);
-	s32_fp W1Row = Orient2D(V2, V0, Pixel);
-	s32_fp W2Row = Orient2D(V0, V1, Pixel);
+	edge E01, E12, E20;
+	wide_s32 WideOne = wide_s32(1);
+	wide_s32 WideZero = wide_s32(0);
 
-	if (FillRule(V2 - V1))	W0Row -= 1;
-	if (FillRule(V0 - V2))	W1Row -= 1;
-	if (FillRule(V1 - V0))	W2Row -= 1;
+	wide_s32 W0Row = E12.Init(V1, V2, Pixel);
+	wide_s32 W1Row = E20.Init(V2, V0, Pixel);
+	wide_s32 W2Row = E01.Init(V0, V1, Pixel);
 
-	// Offset values
-	s32 A01 = (V0.y - V1.y) << FP_SHIFT, B01 = (V1.x - V0.x) << FP_SHIFT;
-	s32 A12 = (V1.y - V2.y) << FP_SHIFT, B12 = (V2.x - V1.x) << FP_SHIFT;
-	s32 A20 = (V2.y - V0.y) << FP_SHIFT, B20 = (V0.x - V2.x) << FP_SHIFT;
+	if (FillRule(V2 - V1))	W0Row -= WideOne;
+	if (FillRule(V0 - V2))	W1Row -= WideOne;
+	if (FillRule(V1 - V0))	W2Row -= WideOne;
 
-	for (s32 Y = MinY; Y < MaxY; Y += 1)
+	for (s32 Y = MinY; Y < MaxY; Y += edge::StepSizeY)
 	{
-		s32_fp W0 = W0Row;
-		s32_fp W1 = W1Row;
-		s32_fp W2 = W2Row;
+		wide_s32 W0 = W0Row;
+		wide_s32 W1 = W1Row;
+		wide_s32 W2 = W2Row;
 
-		for (s32 X = MinX; X < MaxX; X += 1)
+		for (s32 X = MinX; X < MaxX; X += edge::StepSizeX)
 		{
-			if ((W0 | W1 | W2) >= 0)
+			wide_s32 Mask = W0 | W1 | W2;
+			wide_s32 Comparison = Mask >= WideZero;
+
+			if (AnyTrue(Comparison))
 			{
-				s32 Sum = (W0 + W1 + W2) >> FP_SHIFT;
-				v3 Weights = v3(f32(W0 >> FP_SHIFT) / f32(Sum),
-								f32(W1 >> FP_SHIFT) / f32(Sum),
-								f32(W2 >> FP_SHIFT) / f32(Sum));
-
-				u8 Red = u8(255.999f * Weights.x);
-				u8 Green = u8(255.999f * Weights.y);
-				u8 Blue = u8(255.999f * Weights.z);
-
-				color_u8 Color = { Red, Green, Blue };
-
-				SetPixel(Bitmap, X, Y, Color);
+				SetPixels_4x(Bitmap, X, Y, Comparison);
 			}
 
-			W0 += A12;
-			W1 += A20;
-			W2 += A01;
+			W0 += E12.OneStepX;
+			W1 += E20.OneStepX;
+			W2 += E01.OneStepX;
 		}
 
-		W0Row += B12;
-		W1Row += B20;
-		W2Row += B01;
+		W0Row += E12.OneStepY;
+		W1Row += E20.OneStepY;
+		W2Row += E01.OneStepY;
 	}
 }
 
@@ -291,3 +295,38 @@ FillRule(v2_fp Edge)
 	return (IsTopLeft || IsTopEdge);
 }
 
+wide_s32
+edge::Init(const v2_fp &V0,
+		   const v2_fp &V1,
+		   const v2_fp &P)
+{
+	s32 A = (V0.y - V1.y);
+	s32 B = (V1.x - V0.x);
+	s32 C = (V0.x * V1.y) - (V0.y * V1.x);
+
+	this->OneStepX = wide_s32((A << FP_SHIFT) * StepSizeX);
+	this->OneStepY = wide_s32((B << FP_SHIFT) * StepSizeY);
+
+	wide_s32 X = wide_s32(P.x) + WIDE_S32_ZERO_TO_RANGE * wide_s32(FP_MULTIPLIER);
+	wide_s32 Y = wide_s32(P.y);
+
+	return (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
+}
+
+void
+SetPixels_4x(bitmap *Bitmap,
+			 s32 X, 
+			 s32 Y, 
+			 wide_s32 Mask)
+{
+	alignas(16) static s32 Pixels[4];
+
+	_mm_store_si128((__m128i *)&Pixels[0], Mask.V);
+
+	s32 BasePixel = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+
+	Bitmap->Memory[BasePixel + 1] = u8(Pixels[0]);
+	Bitmap->Memory[BasePixel + 5] = u8(Pixels[1]);
+	Bitmap->Memory[BasePixel + 9] = u8(Pixels[2]);
+	Bitmap->Memory[BasePixel + 13] = u8(Pixels[3]);
+}
