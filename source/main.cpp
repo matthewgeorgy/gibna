@@ -13,6 +13,7 @@
    - Clipping
 */
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 
 #define MG_IMPL
@@ -114,9 +115,14 @@ main(void)
 	///////////////////////////////////
 	// Main loop
 
-	MSG		Message;
-	f32 	Angle = 0;
+	MSG					Message;
+	f32 				Angle = 0;
+	LARGE_INTEGER		Start, End, Frequency;
+	f32					Freq;
 
+
+	QueryPerformanceFrequency(&Frequency);
+	Freq = Frequency.QuadPart / 1000.0f;
 
 	for (;;)
 	{
@@ -131,6 +137,8 @@ main(void)
 		}
 		else
 		{
+			QueryPerformanceCounter(&Start);
+
 			ClearBitmap(&Bitmap);
 
 			f32 CosAngle = Cos(Angle);
@@ -148,6 +156,12 @@ main(void)
 			RasterizeTriangle(&Bitmap, Triangle);
 
 			PresentBitmap(Bitmap);
+
+			QueryPerformanceCounter(&End);
+
+			static CHAR Buffer[256];
+			sprintf(Buffer, "gibna --- %f ms / frame", (End.QuadPart - Start.QuadPart) / Freq);
+			SetWindowText(Window, Buffer);
 
 			Angle += 0.005f;
 		}
