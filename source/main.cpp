@@ -2,9 +2,9 @@
    NOTE(matthew): Completed
    - Edge fill-rule
    - Subpixel precision
+   - Incremental edge function computation
 
    TODO(matthew):
-   - Incremental edge function computation
    - 4-wide SIMD (SSE)
    - 8-wide SIMD (AVX)
    - Full transform (WVP + perspective + 1/z) pipeline
@@ -170,27 +170,44 @@ RasterizeTriangle(bitmap *Bitmap,
 	MinY = Max(MinY, 0);
 	MaxY = Min(MaxY, SCR_HEIGHT);
 
+	// Initial edge function values
+	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
+	s32_fp W0Row = Orient2D(V1, V2, Pixel);
+	s32_fp W1Row = Orient2D(V2, V0, Pixel);
+	s32_fp W2Row = Orient2D(V0, V1, Pixel);
+
+	if (FillRule(V2 - V1))	W0Row -= 1;
+	if (FillRule(V0 - V2))	W1Row -= 1;
+	if (FillRule(V1 - V0))	W2Row -= 1;
+
+	// Offset values
+	s32 A01 = (V0.y - V1.y) << FP_SHIFT, B01 = (V1.x - V0.x) << FP_SHIFT;
+	s32 A12 = (V1.y - V2.y) << FP_SHIFT, B12 = (V2.x - V1.x) << FP_SHIFT;
+	s32 A20 = (V2.y - V0.y) << FP_SHIFT, B20 = (V0.x - V2.x) << FP_SHIFT;
+
 	for (s32 Y = MinY; Y < MaxY; Y += 1)
 	{
+		s32_fp W0 = W0Row;
+		s32_fp W1 = W1Row;
+		s32_fp W2 = W2Row;
+
 		for (s32 X = MinX; X < MaxX; X += 1)
 		{
-			v2_fp Pixel = v2_fp(f32(X) + 0.5f, f32(Y) + 0.5f);
-
-			s32_fp W0 = Orient2D(V1, V2, Pixel);
-			s32_fp W1 = Orient2D(V2, V0, Pixel);
-			s32_fp W2 = Orient2D(V0, V1, Pixel);
-
-			if (FillRule(V2 - V1))	W0 -= 1;
-			if (FillRule(V0 - V2))	W1 -= 1;
-			if (FillRule(V1 - V0))	W2 -= 1;
-
 			if ((W0 | W1 | W2) >= 0)
 			{
 				color_u8 Color = { 0, 255, 0 };
 
 				SetPixel(Bitmap, X, Y, Color);
 			}
+
+			W0 += A12;
+			W1 += A20;
+			W2 += A01;
 		}
+
+		W0Row += B12;
+		W1Row += B20;
+		W2Row += B01;
 	}
 }
 
