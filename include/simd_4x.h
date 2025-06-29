@@ -77,6 +77,16 @@ f32_4x		operator/(f32_4x A, f32_4x B);
 // Misc
 ///////////////////////////////////
 
+// NOTE(matthew):
+// This keeps the value in Dest if Mask is true, and replaces it with Source
+// if the Mask is false.
+// Example:
+//
+// Mask   : 1   0   1   0
+// Source : 2   5   8   6
+// Dest   : 7   3   9   4
+//
+// Out    : 7   5   9   6 
 void		ConditionalAssign(s32_4x *Dest, s32_4x Mask, s32_4x Source);
 s32_4x 		GatherS32(void *BasePtr, u32 Stride, s32_4x Indices);
 

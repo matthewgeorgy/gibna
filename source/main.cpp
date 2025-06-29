@@ -48,7 +48,7 @@ s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
-void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 Mask, weights Weights);
+void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights);
 
 int
 main(void)
@@ -342,7 +342,7 @@ void
 SetPixels_4x(bitmap *Bitmap,
 			 s32 X, 
 			 s32 Y, 
-			 wide_s32 Mask,
+			 wide_s32 ActivePixelMask,
 			 weights Weights)
 {
 	wide_f32 Wide256 = wide_f32(255.999f);
@@ -351,17 +351,29 @@ SetPixels_4x(bitmap *Bitmap,
 	wide_f32 Greens = Wide256 * Weights.W1;
 	wide_f32 Blues = Wide256 * Weights.W2;
 
-	wide_s32 RedInts = WideS32FromF32(Reds);
-	wide_s32 GreenInts = WideS32FromF32(Greens);
-	wide_s32 BlueInts = WideS32FromF32(Blues);
+	wide_s32 NewReds = WideS32FromF32(Reds);
+	wide_s32 NewGreens = WideS32FromF32(Greens);
+	wide_s32 NewBlues = WideS32FromF32(Blues);
+
+	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
+	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+	u8 *BasePixelPtr = &Bitmap->Memory[PixelCoord];
+
+	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
+	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);
+	wide_s32 OldBlues  = GatherS32(BasePixelPtr + 0, BYTES_PER_PIXEL, PixelIndices);
+
+	ConditionalAssign(&NewReds, ActivePixelMask, OldReds);
+	ConditionalAssign(&NewGreens, ActivePixelMask, OldGreens);
+	ConditionalAssign(&NewBlues, ActivePixelMask, OldBlues);
 
 	alignas(16) static s32 R[4];
 	alignas(16) static s32 G[4];
 	alignas(16) static s32 B[4];
 
-	_mm_store_si128((__m128i *)&R[0], RedInts.V);
-	_mm_store_si128((__m128i *)&G[0], GreenInts.V);
-	_mm_store_si128((__m128i *)&B[0], BlueInts.V);
+	_mm_store_si128((__m128i *)&R[0], NewReds.V);
+	_mm_store_si128((__m128i *)&G[0], NewGreens.V);
+	_mm_store_si128((__m128i *)&B[0], NewBlues.V);
 
 	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(B[0]), u8(G[0])});
 	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(B[1]), u8(G[1])});
