@@ -5,11 +5,11 @@
    - Incremental edge function computation
    - 4-wide SIMD (SSE)
    - Full transform (WVP + perspective + 1/z) pipeline
+   - Perspective-correct interpolation
 
    TODO(matthew):
    - 8-wide SIMD (AVX)
    - Depth buffering
-   - Perspective-correct interpolation
    - Clipping
 */
 
@@ -27,7 +27,7 @@
 
 struct triangle
 {
-	v2		V0,
+	v4		V0,
 			V1,
 			V2;
 	v3		Color0,
@@ -198,7 +198,7 @@ main(void)
 
 			QueryPerformanceCounter(&Start);
 
-			World = Mat4Rotate(Angle, v3(0, 0, 1));//Mat4Identity();
+			World = Mat4Rotate(80, v3(1, 0, 0));
 
 			State.WVP = Proj * View * World;
 
@@ -226,9 +226,9 @@ RasterizeTriangle(bitmap *Bitmap,
 	s32				MinX, MaxX,
 					MinY, MaxY;
 
-	v2 RasterV0 = NdcToRaster(Triangle.V0);
-	v2 RasterV1 = NdcToRaster(Triangle.V1);
-	v2 RasterV2 = NdcToRaster(Triangle.V2);
+	v2 RasterV0 = NdcToRaster(v2(Triangle.V0.x, Triangle.V0.y));
+	v2 RasterV1 = NdcToRaster(v2(Triangle.V1.x, Triangle.V1.y));
+	v2 RasterV2 = NdcToRaster(v2(Triangle.V2.x, Triangle.V2.y));
 
 	v2_fp V0 = v2_fp(RasterV0);
 	v2_fp V1 = v2_fp(RasterV1);
@@ -273,12 +273,16 @@ RasterizeTriangle(bitmap *Bitmap,
 
 			if (AnyTrue(Comparison))
 			{
-				wide_s32 Sum = (W0 + W1 + W2) >> FP_SHIFT;
+				wide_f32 L0 = WideF32FromS32(W0 >> FP_SHIFT) * Triangle.V0.w;
+				wide_f32 L1 = WideF32FromS32(W1 >> FP_SHIFT) * Triangle.V1.w;
+				wide_f32 L2 = WideF32FromS32(W2 >> FP_SHIFT) * Triangle.V2.w;
+				wide_f32 Sum = L0 + L1 + L2;
+
 				weights Weights;
 
-				Weights.W0 = WideF32FromS32(W0 >> FP_SHIFT) / WideF32FromS32(Sum);
-				Weights.W1 = WideF32FromS32(W1 >> FP_SHIFT) / WideF32FromS32(Sum);
-				Weights.W2 = WideF32FromS32(W2 >> FP_SHIFT) / WideF32FromS32(Sum);
+				Weights.W0 = L0 / Sum;
+				Weights.W1 = L1 / Sum;
+				Weights.W2 = L2 / Sum;
 
 				color_triple Colors;
 
@@ -473,15 +477,11 @@ Draw(renderer_state *State,
 		v4 T1 = WVP * v4(V1.x, V1.y, V1.z, 1.0f);
 		v4 T2 = WVP * v4(V2.x, V2.y, V2.z, 1.0f);
 
-		T0 = PerspectiveDivide(T0);
-		T1 = PerspectiveDivide(T1);
-		T2 = PerspectiveDivide(T2);
-
 		triangle Triangle;
 
-		Triangle.V0 = v2(T0.x, T0.y);
-		Triangle.V1 = v2(T1.x, T1.y);
-		Triangle.V2 = v2(T2.x, T2.y);
+		Triangle.V0 = PerspectiveDivide(T0);
+		Triangle.V1 = PerspectiveDivide(T1);
+		Triangle.V2 = PerspectiveDivide(T2);
 
 		Triangle.Color0 = Vertices[Idx0 + 1];
 		Triangle.Color1 = Vertices[Idx1 + 1];
