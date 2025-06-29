@@ -48,7 +48,7 @@ s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
-void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 Mask);
+void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 Mask, weights Weights);
 
 int
 main(void)
@@ -224,7 +224,18 @@ RasterizeTriangle(bitmap *Bitmap,
 
 			if (AnyTrue(Comparison))
 			{
-				SetPixels_4x(Bitmap, X, Y, Comparison);
+				wide_s32 Sum = (W0 + W1 + W2) >> FP_SHIFT;
+				weights Weights;
+
+				wide_s32 MaskedW0 = W0 & Comparison;
+				wide_s32 MaskedW1 = W1 & Comparison;
+				wide_s32 MaskedW2 = W2 & Comparison;
+
+				Weights.W0 = WideF32FromS32(MaskedW0 >> FP_SHIFT) / WideF32FromS32(Sum);
+				Weights.W1 = WideF32FromS32(MaskedW1 >> FP_SHIFT) / WideF32FromS32(Sum);
+				Weights.W2 = WideF32FromS32(MaskedW2 >> FP_SHIFT) / WideF32FromS32(Sum);
+
+				SetPixels_4x(Bitmap, X, Y, Comparison, Weights);
 			}
 
 			W0 += E12.OneStepX;
@@ -331,16 +342,29 @@ void
 SetPixels_4x(bitmap *Bitmap,
 			 s32 X, 
 			 s32 Y, 
-			 wide_s32 Mask)
+			 wide_s32 Mask,
+			 weights Weights)
 {
-	alignas(16) static s32 Pixels[4];
+	wide_f32 Wide256 = wide_f32(255.999f);
 
-	_mm_store_si128((__m128i *)&Pixels[0], Mask.V);
+	wide_f32 Reds = Wide256 * Weights.W0;
+	wide_f32 Greens = Wide256 * Weights.W1;
+	wide_f32 Blues = Wide256 * Weights.W2;
 
-	s32 BasePixel = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+	wide_s32 RedInts = WideS32FromF32(Reds);
+	wide_s32 GreenInts = WideS32FromF32(Greens);
+	wide_s32 BlueInts = WideS32FromF32(Blues);
 
-	Bitmap->Memory[BasePixel + 1] = u8(Pixels[0]);
-	Bitmap->Memory[BasePixel + 5] = u8(Pixels[1]);
-	Bitmap->Memory[BasePixel + 9] = u8(Pixels[2]);
-	Bitmap->Memory[BasePixel + 13] = u8(Pixels[3]);
+	alignas(16) static s32 R[4];
+	alignas(16) static s32 G[4];
+	alignas(16) static s32 B[4];
+
+	_mm_store_si128((__m128i *)&R[0], RedInts.V);
+	_mm_store_si128((__m128i *)&G[0], GreenInts.V);
+	_mm_store_si128((__m128i *)&B[0], BlueInts.V);
+
+	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(B[0]), u8(G[0])});
+	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(B[1]), u8(G[1])});
+	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(B[2]), u8(G[2])});
+	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(B[3]), u8(G[3])});
 }
