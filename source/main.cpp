@@ -32,6 +32,19 @@ struct triangle
 			V2;
 };
 
+struct buffer
+{
+	u32 		Size;
+	void		*Data;
+};
+
+struct renderer_state
+{
+	buffer		VertexBuffer;
+	m4			WVP;
+	bitmap 		*Bitmap;
+};
+
 struct edge
 {
 	static const s32 StepSizeX = 4;
@@ -49,6 +62,9 @@ v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
 void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights);
+
+void				Draw(renderer_state *State, u32 Count);
+buffer 				CreateBuffer(void *Data, u32 Size);
 
 int
 main(void)
@@ -108,9 +124,14 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-	v2 V0 = v2(-0.5f, -0.5f);
-	v2 V1 = v2( 0.5f, -0.5f);
-	v2 V2 = v2( 0.0f,  0.5f);
+	v2		Vertices[] =
+	{
+		v2(-0.5f, -0.5f),
+		v2( 0.5f, -0.5f),
+		v2( 0.0f,  0.5f),
+	};
+
+	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
 
 	///////////////////////////////////
 	// Main loop
@@ -119,10 +140,14 @@ main(void)
 	f32 				Angle = 0;
 	LARGE_INTEGER		Start, End, Frequency;
 	f32					Freq;
+	renderer_state		State;
 
 
 	QueryPerformanceFrequency(&Frequency);
 	Freq = Frequency.QuadPart / 1000.0f;
+
+	State.VertexBuffer = VertexBuffer;
+	State.Bitmap = &Bitmap;
 
 	for (;;)
 	{
@@ -141,19 +166,7 @@ main(void)
 
 			ClearBitmap(&Bitmap);
 
-			f32 CosAngle = Cos(Angle);
-			f32 SinAngle = Sin(Angle);
-
-			triangle Triangle;
-
-			Triangle.V0.x = V0.x * CosAngle - V0.y * SinAngle;
-			Triangle.V0.y = V0.x * SinAngle + V0.y * CosAngle;
-			Triangle.V1.x = V1.x * CosAngle - V1.y * SinAngle;
-			Triangle.V1.y = V1.x * SinAngle + V1.y * CosAngle;
-			Triangle.V2.x = V2.x * CosAngle - V2.y * SinAngle;
-			Triangle.V2.y = V2.x * SinAngle + V2.y * CosAngle;
-
-			RasterizeTriangle(&Bitmap, Triangle);
+			Draw(&State, 3);
 
 			PresentBitmap(Bitmap);
 
@@ -380,3 +393,35 @@ SetPixels_4x(bitmap *Bitmap,
 	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(B[2]), u8(G[2])});
 	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(B[3]), u8(G[3])});
 }
+
+void				
+Draw(renderer_state *State, 
+	 u32 Count)
+{
+	v2 *Vertices = (v2 *)State->VertexBuffer.Data;
+
+	for (u32 BaseID = 0; BaseID < Count; BaseID += 3)
+	{
+		triangle Triangle;
+
+		Triangle.V0 = Vertices[BaseID + 0];
+		Triangle.V1 = Vertices[BaseID + 1];
+		Triangle.V2 = Vertices[BaseID + 2];
+
+		RasterizeTriangle(State->Bitmap, Triangle);
+	}
+}
+
+buffer 				
+CreateBuffer(void *Data, 
+			 u32 Size)
+{
+	buffer		Buffer;
+
+	Buffer.Size = Size;
+	Buffer.Data = HeapAlloc(GetProcessHeap(), 0, Size);
+	CopyMemory(Buffer.Data, Data, Size);
+
+	return (Buffer);
+}
+
