@@ -30,6 +30,9 @@ struct triangle
 	v2		V0,
 			V1,
 			V2;
+	v3		Color0,
+			Color1,
+			Color2;
 };
 
 struct camera
@@ -63,12 +66,19 @@ struct edge
 	wide_s32 Init(const v2_fp &V0, const v2_fp &V1, const v2_fp &P);
 };
 
+struct color_triple
+{
+	v3		C0,
+			C1,
+			C2;
+};
+
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
-void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights);
+void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
 v4					PerspectiveDivide(v4 V);
 void				Draw(renderer_state *State, u32 Count);
 buffer 				CreateBuffer(void *Data, u32 Size);
@@ -133,13 +143,13 @@ main(void)
 
 	v3		Vertices[] =
 	{
-		v3(-0.5f, -0.5f, 0.5f),
-		v3( 0.5f, -0.5f, 0.5f),
-		v3( 0.5f,  0.5f, 0.5f),
+		v3(-0.5f, -0.5f, 0.5f),		v3(1.0f, 0.0f, 0.0f),
+		v3( 0.5f, -0.5f, 0.5f),		v3(0.0f, 1.0f, 0.0f),
+		v3( 0.5f,  0.5f, 0.5f),		v3(0.0f, 0.0f, 1.0f),
 
-		v3(-0.5f, -0.5f, 0.5f),
-		v3( 0.5f,  0.5f, 0.5f),
-		v3(-0.5f,  0.5f, 0.5f),
+		v3(-0.5f, -0.5f, 0.5f),		v3(1.0f, 0.0f, 0.0f),
+		v3( 0.5f,  0.5f, 0.5f),		v3(0.0f, 0.0f, 1.0f),
+		v3(-0.5f,  0.5f, 0.5f),		v3(1.0f, 1.0f, 1.0f),
 	};
 
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
@@ -270,7 +280,13 @@ RasterizeTriangle(bitmap *Bitmap,
 				Weights.W1 = WideF32FromS32(MaskedW1 >> FP_SHIFT) / WideF32FromS32(Sum);
 				Weights.W2 = WideF32FromS32(MaskedW2 >> FP_SHIFT) / WideF32FromS32(Sum);
 
-				SetPixels_4x(Bitmap, X, Y, Comparison, Weights);
+				color_triple Colors;
+
+				Colors.C0 = Triangle.Color0;
+				Colors.C1 = Triangle.Color1;
+				Colors.C2 = Triangle.Color2;
+
+				SetPixels_4x(Bitmap, X, Y, Comparison, Weights, Colors);
 			}
 
 			W0 += E12.OneStepX;
@@ -378,13 +394,30 @@ SetPixels_4x(bitmap *Bitmap,
 			 s32 X, 
 			 s32 Y, 
 			 wide_s32 ActivePixelMask,
-			 weights Weights)
+			 weights Weights,
+			 color_triple Colors)
 {
 	wide_f32 Wide256 = wide_f32(255.999f);
 
-	wide_f32 Reds = Wide256 * Weights.W0;
-	wide_f32 Greens = Wide256 * Weights.W1;
-	wide_f32 Blues = Wide256 * Weights.W2;
+	wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0,
+								Colors.C0.g * Weights.W0,
+								Colors.C0.b * Weights.W0);
+	wide_v3 NewColor1 = wide_v3(Colors.C1.r * Weights.W1,
+								Colors.C1.g * Weights.W1,
+								Colors.C1.b * Weights.W1);
+	wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2,
+								Colors.C2.g * Weights.W2,
+								Colors.C2.b * Weights.W2);
+
+	wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2;
+
+	NewColor.r = NewColor.r * Wide256;
+	NewColor.g = NewColor.g * Wide256;
+	NewColor.b = NewColor.b * Wide256;
+
+	wide_f32 Reds = NewColor.r;
+	wide_f32 Greens = NewColor.g;
+	wide_f32 Blues = NewColor.b;
 
 	wide_s32 NewReds = WideS32FromF32(Reds);
 	wide_s32 NewGreens = WideS32FromF32(Greens);
@@ -422,12 +455,17 @@ Draw(renderer_state *State,
 {
 	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
 	m4 WVP = State->WVP;
+	u32 Stride = 2;
 
 	for (u32 BaseID = 0; BaseID < Count; BaseID += 3)
 	{
-		v3 V0 = Vertices[BaseID + 0];
-		v3 V1 = Vertices[BaseID + 1];
-		v3 V2 = Vertices[BaseID + 2];
+		u32 Idx0 = Stride * (BaseID + 0);
+		u32 Idx1 = Stride * (BaseID + 1);
+		u32 Idx2 = Stride * (BaseID + 2);
+
+		v3 V0 = Vertices[Idx0];
+		v3 V1 = Vertices[Idx1];
+		v3 V2 = Vertices[Idx2];
 
 		v4 T0 = WVP * v4(V0.x, V0.y, V0.z, 1.0f);
 		v4 T1 = WVP * v4(V1.x, V1.y, V1.z, 1.0f);
@@ -442,6 +480,10 @@ Draw(renderer_state *State,
 		Triangle.V0 = v2(T0.x, T0.y);
 		Triangle.V1 = v2(T1.x, T1.y);
 		Triangle.V2 = v2(T2.x, T2.y);
+
+		Triangle.Color0 = Vertices[Idx0 + 1];
+		Triangle.Color1 = Vertices[Idx1 + 1];
+		Triangle.Color2 = Vertices[Idx2 + 1];
 
 		RasterizeTriangle(State->Bitmap, Triangle);
 	}

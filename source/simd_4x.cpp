@@ -308,6 +308,49 @@ operator/(f32_4x A,
 }
 
 ///////////////////////////////////
+// v3_4x
+///////////////////////////////////
+
+v3_4x::v3_4x()
+{
+}
+
+v3_4x::v3_4x(f32_4x x, 
+			 f32_4x y,
+			 f32_4x z)
+{
+	this->x = x;
+	this->y = y;
+	this->z = z;
+}
+
+v3_4x		
+operator+(v3_4x A, 
+		  v3_4x B)
+{
+	v3_4x		Result;
+
+	Result.x = A.x + B.x;
+	Result.y = A.y + B.y;
+	Result.z = A.z + B.z;
+
+	return (Result);
+}
+
+v3_4x		
+operator-(v3_4x A, 
+		  v3_4x B)
+{
+	v3_4x		Result;
+
+	Result.x = A.x - B.x;
+	Result.y = A.y - B.y;
+	Result.z = A.z - B.z;
+
+	return (Result);
+}
+
+///////////////////////////////////
 // Misc
 ///////////////////////////////////
 

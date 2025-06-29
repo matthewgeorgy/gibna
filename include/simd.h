@@ -5,6 +5,7 @@
 
 typedef s32_4x		wide_s32;
 typedef f32_4x		wide_f32;
+typedef v3_4x		wide_v3;
 
 #define WIDE_S32_ZERO_TO_RANGE	wide_s32(0, 1, 2, 3)
 
