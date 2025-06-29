@@ -143,18 +143,42 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-	v3		Vertices[] =
+	f32 	Vertices[] =
 	{
-		v3(-0.5f, -0.5f, 0.5f),		v3(1.0f, 0.0f, 0.0f),
-		v3( 0.5f, -0.5f, 0.5f),		v3(0.0f, 1.0f, 0.0f),
-		v3( 0.5f,  0.5f, 0.5f),		v3(0.0f, 0.0f, 1.0f),
-		v3(-0.5f,  0.5f, 0.5f),		v3(1.0f, 1.0f, 1.0f),
+		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,	1.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,	1.0f, 1.0f, 1.0f,
 	};
-
-	u32 Indices[] =
+	u32		Indices[] =
 	{
-		0, 1, 2,
-		0, 2, 3,
+		// front face
+		2, 1, 0,
+		3, 2, 0,
+
+		// back face
+		5, 6, 4,
+		6, 7, 4,
+
+		// left face
+		1, 5, 4,
+		0, 1, 4,
+
+		// right face
+		6, 2, 3,
+		7, 6, 3,
+
+		// top face
+		6, 5, 1,
+		2, 6, 1,
+
+		// bottom face
+		3, 0, 4,
+		7, 3, 4,
 	};
 
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
@@ -181,8 +205,8 @@ main(void)
 	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
 
-	Camera.Pos = v3(0, 0, -2);
-	Camera.Front = v3(0, 0, 1);
+	Camera.Pos = v3(0, 3, -8);
+	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
 
 	View = Mat4LookAtLH(Camera.Pos, Camera.Front, Camera.Up);
@@ -205,11 +229,15 @@ main(void)
 
 			QueryPerformanceCounter(&Start);
 
-			World = Mat4Rotate(80, v3(1, 0, 0));
-
+			// Cube 1
+			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f);
 			State.WVP = Proj * View * World;
+			DrawIndexed(&State, _countof(Indices));
 
-			DrawIndexed(&State, 6);
+			// Cube 2
+			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(1.3f);
+			State.WVP = Proj * View * World;
+			DrawIndexed(&State, _countof(Indices));
 
 			QueryPerformanceCounter(&End);
 
