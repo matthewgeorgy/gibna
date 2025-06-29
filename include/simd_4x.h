@@ -29,6 +29,7 @@ struct s32_4x
 s32_4x		operator+(s32_4x A, s32_4x B);
 s32_4x		operator-(s32_4x A, s32_4x B);
 s32_4x		operator*(s32_4x A, s32_4x B);
+s32_4x		operator*(s32 A, s32_4x B);
 
 // Comparison
 s32_4x		operator==(s32_4x A, s32_4x B);
@@ -71,6 +72,7 @@ struct f32_4x
 f32_4x		operator+(f32_4x A, f32_4x B);
 f32_4x		operator-(f32_4x A, f32_4x B);
 f32_4x		operator*(f32_4x A, f32_4x B);
+f32_4x		operator*(f32 A, f32_4x B);
 f32_4x		operator/(f32_4x A, f32_4x B);
 
 ///////////////////////////////////

@@ -79,6 +79,17 @@ operator*(s32_4x A,
 	return (Result);
 }
 
+s32_4x		
+operator*(s32 A, 
+		  s32_4x B)
+{
+	s32_4x		Result;
+
+	Result = s32_4x(A) * B;
+
+	return (Result);
+}
+
 // Comparison
 s32_4x		
 operator==(s32_4x A,
@@ -292,6 +303,17 @@ operator*(f32_4x A,
 	f32_4x		Result;
 
 	Result.V = _mm_mul_ps(A.V, B.V);
+
+	return (Result);
+}
+
+f32_4x		
+operator*(f32 A, 
+		  f32_4x B)
+{
+	f32_4x		Result;
+
+	Result = f32_4x(A) * B;
 
 	return (Result);
 }

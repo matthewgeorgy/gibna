@@ -22,8 +22,8 @@
 #include <fixed_point.h>
 #include <simd.h>
 
-#define SCR_WIDTH 	1024
-#define SCR_HEIGHT 	768
+#define SCR_WIDTH 	800
+#define SCR_HEIGHT 	600
 
 struct triangle
 {
@@ -163,6 +163,9 @@ main(void)
 	f32					Freq;
 	renderer_state		State;
 	camera				Camera;
+	m4 					World,
+						View,
+						Proj;
 
 
 	QueryPerformanceFrequency(&Frequency);
@@ -174,6 +177,9 @@ main(void)
 	Camera.Pos = v3(0, 0, -2);
 	Camera.Front = v3(0, 0, 1);
 	Camera.Up = v3(0, 1, 0);
+
+	View = Mat4LookAtLH(Camera.Pos, Camera.Front, Camera.Up);
+	Proj = Mat4PerspectiveLH(45.0f, f32(SCR_WIDTH) / f32(SCR_HEIGHT), 0.1f, 1000.0f);
 
 	for (;;)
 	{
@@ -192,9 +198,7 @@ main(void)
 
 			QueryPerformanceCounter(&Start);
 
-			m4 World = Mat4Rotate(Angle, v3(0, 0, 1));//Mat4Identity();
-			m4 View = Mat4LookAtLH(Camera.Pos, Camera.Front, Camera.Up);
-			m4 Proj = Mat4PerspectiveLH(45.0f, f32(SCR_WIDTH) / f32(SCR_HEIGHT), 0.1f, 1000.0f);
+			World = Mat4Rotate(Angle, v3(0, 0, 1));//Mat4Identity();
 
 			State.WVP = Proj * View * World;
 
@@ -272,13 +276,9 @@ RasterizeTriangle(bitmap *Bitmap,
 				wide_s32 Sum = (W0 + W1 + W2) >> FP_SHIFT;
 				weights Weights;
 
-				wide_s32 MaskedW0 = W0 & Comparison;
-				wide_s32 MaskedW1 = W1 & Comparison;
-				wide_s32 MaskedW2 = W2 & Comparison;
-
-				Weights.W0 = WideF32FromS32(MaskedW0 >> FP_SHIFT) / WideF32FromS32(Sum);
-				Weights.W1 = WideF32FromS32(MaskedW1 >> FP_SHIFT) / WideF32FromS32(Sum);
-				Weights.W2 = WideF32FromS32(MaskedW2 >> FP_SHIFT) / WideF32FromS32(Sum);
+				Weights.W0 = WideF32FromS32(W0 >> FP_SHIFT) / WideF32FromS32(Sum);
+				Weights.W1 = WideF32FromS32(W1 >> FP_SHIFT) / WideF32FromS32(Sum);
+				Weights.W2 = WideF32FromS32(W2 >> FP_SHIFT) / WideF32FromS32(Sum);
 
 				color_triple Colors;
 
@@ -408,6 +408,8 @@ SetPixels_4x(bitmap *Bitmap,
 	wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2,
 								Colors.C2.g * Weights.W2,
 								Colors.C2.b * Weights.W2);
+
+	NewColor0.r = Colors.C0.r * Weights.W0;
 
 	wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2;
 
