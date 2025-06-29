@@ -128,7 +128,11 @@ main(void)
 	{
 		v2(-0.5f, -0.5f),
 		v2( 0.5f, -0.5f),
-		v2( 0.0f,  0.5f),
+		v2( 0.5f,  0.5f),
+
+		v2(-0.5f, -0.5f),
+		v2( 0.5f,  0.5f),
+		v2(-0.5f,  0.5f),
 	};
 
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
@@ -166,7 +170,7 @@ main(void)
 
 			ClearBitmap(&Bitmap);
 
-			Draw(&State, 3);
+			Draw(&State, 6);
 
 			PresentBitmap(Bitmap);
 
@@ -388,10 +392,10 @@ SetPixels_4x(bitmap *Bitmap,
 	_mm_store_si128((__m128i *)&G[0], NewGreens.V);
 	_mm_store_si128((__m128i *)&B[0], NewBlues.V);
 
-	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(B[0]), u8(G[0])});
-	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(B[1]), u8(G[1])});
-	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(B[2]), u8(G[2])});
-	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(B[3]), u8(G[3])});
+	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(G[0]), u8(B[0])});
+	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(G[1]), u8(B[1])});
+	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(G[2]), u8(B[2])});
+	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(G[3]), u8(B[3])});
 }
 
 void				
