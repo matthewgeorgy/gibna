@@ -4,10 +4,10 @@
    - Subpixel precision
    - Incremental edge function computation
    - 4-wide SIMD (SSE)
+   - Full transform (WVP + perspective + 1/z) pipeline
 
    TODO(matthew):
    - 8-wide SIMD (AVX)
-   - Full transform (WVP + perspective + 1/z) pipeline
    - Depth buffering
    - Perspective-correct interpolation
    - Clipping
@@ -30,6 +30,13 @@ struct triangle
 	v2		V0,
 			V1,
 			V2;
+};
+
+struct camera
+{
+	v3		Pos,
+			Front,
+			Up;
 };
 
 struct buffer
@@ -62,7 +69,7 @@ v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
 void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights);
-
+v4					PerspectiveDivide(v4 V);
 void				Draw(renderer_state *State, u32 Count);
 buffer 				CreateBuffer(void *Data, u32 Size);
 
@@ -124,15 +131,15 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-	v2		Vertices[] =
+	v3		Vertices[] =
 	{
-		v2(-0.5f, -0.5f),
-		v2( 0.5f, -0.5f),
-		v2( 0.5f,  0.5f),
+		v3(-0.5f, -0.5f, 0.5f),
+		v3( 0.5f, -0.5f, 0.5f),
+		v3( 0.5f,  0.5f, 0.5f),
 
-		v2(-0.5f, -0.5f),
-		v2( 0.5f,  0.5f),
-		v2(-0.5f,  0.5f),
+		v3(-0.5f, -0.5f, 0.5f),
+		v3( 0.5f,  0.5f, 0.5f),
+		v3(-0.5f,  0.5f, 0.5f),
 	};
 
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
@@ -145,6 +152,7 @@ main(void)
 	LARGE_INTEGER		Start, End, Frequency;
 	f32					Freq;
 	renderer_state		State;
+	camera				Camera;
 
 
 	QueryPerformanceFrequency(&Frequency);
@@ -152,6 +160,10 @@ main(void)
 
 	State.VertexBuffer = VertexBuffer;
 	State.Bitmap = &Bitmap;
+
+	Camera.Pos = v3(0, 0, -2);
+	Camera.Front = v3(0, 0, 1);
+	Camera.Up = v3(0, 1, 0);
 
 	for (;;)
 	{
@@ -166,21 +178,27 @@ main(void)
 		}
 		else
 		{
+			ClearBitmap(&Bitmap);
+
 			QueryPerformanceCounter(&Start);
 
-			ClearBitmap(&Bitmap);
+			m4 World = Mat4Rotate(Angle, v3(0, 0, 1));//Mat4Identity();
+			m4 View = Mat4LookAtLH(Camera.Pos, Camera.Front, Camera.Up);
+			m4 Proj = Mat4PerspectiveLH(45.0f, f32(SCR_WIDTH) / f32(SCR_HEIGHT), 0.1f, 1000.0f);
+
+			State.WVP = Proj * View * World;
 
 			Draw(&State, 6);
 
-			PresentBitmap(Bitmap);
-
 			QueryPerformanceCounter(&End);
+
+			PresentBitmap(Bitmap);
 
 			static CHAR Buffer[256];
 			sprintf(Buffer, "gibna --- %f ms / frame", (End.QuadPart - Start.QuadPart) / Freq);
 			SetWindowText(Window, Buffer);
 
-			Angle += 0.005f;
+			Angle += 1.0f;
 		}
 	}
 
@@ -402,15 +420,28 @@ void
 Draw(renderer_state *State, 
 	 u32 Count)
 {
-	v2 *Vertices = (v2 *)State->VertexBuffer.Data;
+	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
+	m4 WVP = State->WVP;
 
 	for (u32 BaseID = 0; BaseID < Count; BaseID += 3)
 	{
+		v3 V0 = Vertices[BaseID + 0];
+		v3 V1 = Vertices[BaseID + 1];
+		v3 V2 = Vertices[BaseID + 2];
+
+		v4 T0 = WVP * v4(V0.x, V0.y, V0.z, 1.0f);
+		v4 T1 = WVP * v4(V1.x, V1.y, V1.z, 1.0f);
+		v4 T2 = WVP * v4(V2.x, V2.y, V2.z, 1.0f);
+
+		T0 = PerspectiveDivide(T0);
+		T1 = PerspectiveDivide(T1);
+		T2 = PerspectiveDivide(T2);
+
 		triangle Triangle;
 
-		Triangle.V0 = Vertices[BaseID + 0];
-		Triangle.V1 = Vertices[BaseID + 1];
-		Triangle.V2 = Vertices[BaseID + 2];
+		Triangle.V0 = v2(T0.x, T0.y);
+		Triangle.V1 = v2(T1.x, T1.y);
+		Triangle.V2 = v2(T2.x, T2.y);
 
 		RasterizeTriangle(State->Bitmap, Triangle);
 	}
@@ -427,5 +458,18 @@ CreateBuffer(void *Data,
 	CopyMemory(Buffer.Data, Data, Size);
 
 	return (Buffer);
+}
+
+v4					
+PerspectiveDivide(v4 V)
+{
+	v4		Result = V;
+
+	Result.w = 1.0f / V.w;
+	Result.x *= Result.w;
+	Result.y *= Result.w;
+	Result.z *= Result.w;
+	
+	return (Result);
 }
 
