@@ -50,7 +50,8 @@ struct buffer
 
 struct renderer_state
 {
-	buffer		VertexBuffer;
+	buffer		VertexBuffer,
+				IndexBuffer;
 	m4			WVP;
 	bitmap 		*Bitmap;
 };
@@ -80,7 +81,8 @@ b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
 void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
 v4					PerspectiveDivide(v4 V);
-void				Draw(renderer_state *State, u32 Count);
+void				Draw(renderer_state *State, u32 VertexCount);
+void				DrawIndexed(renderer_state *State, u32 IndexCount);
 buffer 				CreateBuffer(void *Data, u32 Size);
 
 int
@@ -146,13 +148,17 @@ main(void)
 		v3(-0.5f, -0.5f, 0.5f),		v3(1.0f, 0.0f, 0.0f),
 		v3( 0.5f, -0.5f, 0.5f),		v3(0.0f, 1.0f, 0.0f),
 		v3( 0.5f,  0.5f, 0.5f),		v3(0.0f, 0.0f, 1.0f),
-
-		v3(-0.5f, -0.5f, 0.5f),		v3(1.0f, 0.0f, 0.0f),
-		v3( 0.5f,  0.5f, 0.5f),		v3(0.0f, 0.0f, 1.0f),
 		v3(-0.5f,  0.5f, 0.5f),		v3(1.0f, 1.0f, 1.0f),
 	};
 
+	u32 Indices[] =
+	{
+		0, 1, 2,
+		0, 2, 3,
+	};
+
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
+	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
 
 	///////////////////////////////////
 	// Main loop
@@ -172,6 +178,7 @@ main(void)
 	Freq = Frequency.QuadPart / 1000.0f;
 
 	State.VertexBuffer = VertexBuffer;
+	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
 
 	Camera.Pos = v3(0, 0, -2);
@@ -202,7 +209,7 @@ main(void)
 
 			State.WVP = Proj * View * World;
 
-			Draw(&State, 6);
+			DrawIndexed(&State, 6);
 
 			QueryPerformanceCounter(&End);
 
@@ -457,17 +464,54 @@ SetPixels_4x(bitmap *Bitmap,
 
 void				
 Draw(renderer_state *State, 
-	 u32 Count)
+	 u32 VertexCount)
 {
 	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
 	m4 WVP = State->WVP;
 	u32 Stride = 2;
 
-	for (u32 BaseID = 0; BaseID < Count; BaseID += 3)
+	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3)
 	{
 		u32 Idx0 = Stride * (BaseID + 0);
 		u32 Idx1 = Stride * (BaseID + 1);
 		u32 Idx2 = Stride * (BaseID + 2);
+
+		v3 V0 = Vertices[Idx0];
+		v3 V1 = Vertices[Idx1];
+		v3 V2 = Vertices[Idx2];
+
+		v4 T0 = WVP * v4(V0.x, V0.y, V0.z, 1.0f);
+		v4 T1 = WVP * v4(V1.x, V1.y, V1.z, 1.0f);
+		v4 T2 = WVP * v4(V2.x, V2.y, V2.z, 1.0f);
+
+		triangle Triangle;
+
+		Triangle.V0 = PerspectiveDivide(T0);
+		Triangle.V1 = PerspectiveDivide(T1);
+		Triangle.V2 = PerspectiveDivide(T2);
+
+		Triangle.Color0 = Vertices[Idx0 + 1];
+		Triangle.Color1 = Vertices[Idx1 + 1];
+		Triangle.Color2 = Vertices[Idx2 + 1];
+
+		RasterizeTriangle(State->Bitmap, Triangle);
+	}
+}
+
+void				
+DrawIndexed(renderer_state *State, 
+			u32 IndexCount)
+{
+	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
+	u32 *Indices = (u32 *)State->IndexBuffer.Data;
+	m4 WVP = State->WVP;
+	u32 Stride = 2;
+
+	for (u32 BaseID = 0; BaseID < IndexCount; BaseID += 3)
+	{
+		u32 Idx0 = Stride * Indices[BaseID + 0];
+		u32 Idx1 = Stride * Indices[BaseID + 1];
+		u32 Idx2 = Stride * Indices[BaseID + 2];
 
 		v3 V0 = Vertices[Idx0];
 		v3 V1 = Vertices[Idx1];
