@@ -170,7 +170,7 @@ main(void)
 			QueryPerformanceCounter(&Start);
 
 			// Cube 1
-			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f);
+			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, -12.5f);
 			State.WVP = Proj * View * World;
 			DrawIndexed(&State, _countof(Indices));
 

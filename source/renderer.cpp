@@ -272,21 +272,41 @@ DrawIndexed(renderer_state *State,
 		u32 Idx1 = Stride * Indices[BaseID + 1];
 		u32 Idx2 = Stride * Indices[BaseID + 2];
 
-		v3 V0 = Vertices[Idx0];
-		v3 V1 = Vertices[Idx1];
-		v3 V2 = Vertices[Idx2];
+		v3 Pos0 = Vertices[Idx0];
+		v3 Pos1 = Vertices[Idx1];
+		v3 Pos2 = Vertices[Idx2];
+		v3 Color0 = Vertices[Idx0 + 1];
+		v3 Color1 = Vertices[Idx1 + 1];
+		v3 Color2 = Vertices[Idx2 + 1];
 
-		v4 T0 = WVP * v4(V0.x, V0.y, V0.z, 1.0f);
-		v4 T1 = WVP * v4(V1.x, V1.y, V1.z, 1.0f);
-		v4 T2 = WVP * v4(V2.x, V2.y, V2.z, 1.0f);
+		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f);
+		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
+		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
 
-		triangle Triangle;
+		vertex ClippedVertices[12];
 
-		Triangle.V0 = { PerspectiveDivide(T0), Vertices[Idx0 + 1] };
-		Triangle.V1 = { PerspectiveDivide(T1), Vertices[Idx1 + 1] };
-		Triangle.V2 = { PerspectiveDivide(T2), Vertices[Idx2 + 1] };
+		ClippedVertices[0] = { T0, Color0 };
+		ClippedVertices[1] = { T1, Color1 };
+		ClippedVertices[2] = { T2, Color2 };
 
-		RasterizeTriangle(State->Bitmap, Triangle);
+		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
+
+		for (vertex *TriangleBegin = ClippedVertices;
+			 TriangleBegin != ClippedVerticesEnd;
+			 TriangleBegin += 3)
+		{
+			vertex V0 = TriangleBegin[0];
+			vertex V1 = TriangleBegin[1];
+			vertex V2 = TriangleBegin[2];
+
+			triangle Triangle;
+
+			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
+			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
+			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+
+			RasterizeTriangle(State->Bitmap, Triangle);
+		}
 	}
 }
 
@@ -315,3 +335,156 @@ PerspectiveDivide(v4 V)
 	
 	return (Result);
 }
+
+vertex
+ClipIntersectEdge(vertex V0,
+				  vertex V1,
+    			  f32 Value0,
+				  f32 Value1)
+{
+	vertex InterpolatedVertex;
+
+	f32 t = Value0 / (Value0 - Value1);
+
+	InterpolatedVertex.Pos = (1.0f - t) * V0.Pos + t * V1.Pos;
+	InterpolatedVertex.Color = (1.0f - t) * V0.Color + t * V1.Color;
+
+	return InterpolatedVertex;
+}
+
+vertex *
+ClipTriangle(vertex *Triangle,
+			 v4 Equation,
+			 vertex *Result)
+{
+	f32 Values[3] =
+	{
+		Dot(Triangle[0].Pos, Equation),
+		Dot(Triangle[1].Pos, Equation),
+		Dot(Triangle[2].Pos, Equation),
+	};
+
+	u8 Mask = (Values[0] < 0.0f ? 0b001 : 0) |
+			  (Values[1] < 0.0f ? 0b010 : 0) |
+			  (Values[2] < 0.0f ? 0b100 : 0);
+
+	switch (Mask)
+	{
+		// All vertices are inside allowed half-space
+		// No clipping required, copy the triangle to output
+		case 0b000:
+		{
+			*Result++ = Triangle[0];
+			*Result++ = Triangle[1];
+			*Result++ = Triangle[2];
+		} break;
+
+		// Vertex 0 is outside allowed half-space
+		// Replace it with points on edges 01 and 02
+		// And re-triangulate
+		case 0b001:
+		{
+			vertex V01 = ClipIntersectEdge(Triangle[0], Triangle[1], Values[0], Values[1]);
+			vertex V02 = ClipIntersectEdge(Triangle[0], Triangle[2], Values[0], Values[2]);
+			*Result++ = V01;
+			*Result++ = Triangle[1];
+			*Result++ = Triangle[2];
+			*Result++ = V01;
+			*Result++ = Triangle[2];
+			*Result++ = V02;
+		} break;
+
+		// Vertex 1 is outside allowed half-space
+		// Replace it with points on edges 10 and 12
+		// And re-triangulate
+		case 0b010:
+		{
+			vertex V10 = ClipIntersectEdge(Triangle[1], Triangle[0], Values[1], Values[0]);
+			vertex V12 = ClipIntersectEdge(Triangle[1], Triangle[2], Values[1], Values[2]);
+			*Result++ = Triangle[0];
+			*Result++ = V10;
+			*Result++ = Triangle[2];
+			*Result++ = Triangle[2];
+			*Result++ = V10;
+			*Result++ = V12;
+		} break;
+
+		// Vertices 0 and 1 are outside allowed half-space
+		// Replace them with points on edges 02 and 12
+		case 0b011:
+		{
+			*Result++ = ClipIntersectEdge(Triangle[0], Triangle[2], Values[0], Values[2]);
+			*Result++ = ClipIntersectEdge(Triangle[1], Triangle[2], Values[1], Values[2]);
+			*Result++ = Triangle[2];
+		} break;
+
+		// Vertex 2 is outside allowed half-space
+		// Replace it with points on edges 20 and 21
+		// And re-triangulate
+		case 0b100:
+		{
+			vertex V20 = ClipIntersectEdge(Triangle[2], Triangle[0], Values[2], Values[0]);
+			vertex V21 = ClipIntersectEdge(Triangle[2], Triangle[1], Values[2], Values[1]);
+			*Result++ = Triangle[0];
+			*Result++ = Triangle[1];
+			*Result++ = V20;
+			*Result++ = V20;
+			*Result++ = Triangle[1];
+			*Result++ = V21;
+		} break;
+
+		// Vertices 0 and 2 are outside allowed half-space
+		// Replace them with points on edges 01 and 21
+		case 0b101:
+		{
+			*Result++ = ClipIntersectEdge(Triangle[0], Triangle[1], Values[0], Values[1]);
+			*Result++ = Triangle[1];
+			*Result++ = ClipIntersectEdge(Triangle[2], Triangle[1], Values[2], Values[1]);
+		} break;
+
+		// Vertices 1 and 2 are outside allowed half-space
+		// Replace them with points on edges 10 and 20
+		case 0b110:
+		{
+			*Result++ = Triangle[0];
+			*Result++ = ClipIntersectEdge(Triangle[1], Triangle[0], Values[1], Values[0]);
+			*Result++ = ClipIntersectEdge(Triangle[2], Triangle[0], Values[2], Values[0]);
+		} break;
+
+		// All vertices are outside allowed half-space
+		// Clip the whole Triangle, result is empty
+		case 0b111:
+		{
+		} break;
+	}
+
+	return Result;
+}
+
+vertex *
+ClipTriangle(vertex *Begin,
+			 vertex *End)
+{
+	static const v4 Equations[2] =
+	{
+		v4(0, 0, 1, 1),	// Z > -W
+		v4(0, 0, -1, 1)	// Z < W
+	};
+
+	vertex Results[12];
+
+	for (auto Equation : Equations)
+	{
+		vertex *ResultEnd = Results;
+
+		for (vertex *Triangle = Begin; Triangle != End; Triangle += 3)
+		{
+			ResultEnd = ClipTriangle(Triangle, Equation, ResultEnd);
+		}
+
+		End = std::copy(Results, ResultEnd, Begin);
+	}
+
+	return End;
+}
+

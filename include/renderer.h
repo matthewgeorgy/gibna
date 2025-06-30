@@ -1,6 +1,8 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include <algorithm>
+
 #include <mg.h>
 #include <bitmap.h>
 #include <fixed_point.h>
@@ -70,6 +72,12 @@ v4					PerspectiveDivide(v4 V);
 void				Draw(renderer_state *State, u32 VertexCount);
 void				DrawIndexed(renderer_state *State, u32 IndexCount);
 buffer 				CreateBuffer(void *Data, u32 Size);
+
+// NOTE(matthew): See the following reference for the clipping implementation
+// https://lisyarus.github.io/blog/posts/implementing-a-tiny-cpu-rasterizer-part-5.html#section-clipping
+vertex				ClipIntersectEdge(vertex V0, vertex V1, f32 Value0, f32 Value1);
+vertex 				*ClipTriangle(vertex *Triangle, v4 Equation, vertex *Result);
+vertex 				*ClipTriangle(vertex *Begin, vertex *End);
 
 #endif // __RENDERER_H__
 
