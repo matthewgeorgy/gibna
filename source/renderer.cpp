@@ -164,15 +164,13 @@ edge::Init(const v2_fp &V0,
 	return (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
 }
 
-#if (SIMD_WIDTH==4)
-
 void
-SetPixels_4x(bitmap *Bitmap,
-			 s32 X,
-			 s32 Y,
-			 wide_s32 ActivePixelMask,
-			 weights Weights,
-			 color_triple Colors)
+SetPixels(bitmap *Bitmap,
+		  s32 X,
+		  s32 Y,
+		  wide_s32 ActivePixelMask,
+		  weights Weights,
+		  color_triple Colors)
 {
 	wide_f32 Wide256 = wide_f32(255.999f);
 
@@ -214,119 +212,45 @@ SetPixels_4x(bitmap *Bitmap,
 	ConditionalAssign(&NewGreens, ActivePixelMask, OldGreens);
 	ConditionalAssign(&NewBlues, ActivePixelMask, OldBlues);
 
-	alignas(16) static s32 R[4];
-	alignas(16) static s32 G[4];
-	alignas(16) static s32 B[4];
+	alignas(4 * SIMD_WIDTH) static s32 R[SIMD_WIDTH];
+	alignas(4 * SIMD_WIDTH) static s32 G[SIMD_WIDTH];
+	alignas(4 * SIMD_WIDTH) static s32 B[SIMD_WIDTH];
 
+#if (SIMD_WIDTH==4)
 	_mm_store_si128((__m128i *)&R[0], NewReds.V);
 	_mm_store_si128((__m128i *)&G[0], NewGreens.V);
 	_mm_store_si128((__m128i *)&B[0], NewBlues.V);
-
-	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(G[0]), u8(B[0])});
-	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(G[1]), u8(B[1])});
-	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(G[2]), u8(B[2])});
-	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(G[3]), u8(B[3])});
-}
-
-void
-UpdateDepth_4x(u32 *BaseDepthPtr,
-			   wide_s32 ActivePixelMask,
-			   wide_s32 OldDepth,
-			   wide_s32 NewDepth)
-{
-	alignas(16) static u32 Depth[4];
-
-	ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
-
-	_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
-
-	CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
-}
-
 #elif (SIMD_WIDTH==8)
-
-void
-SetPixels_8x(bitmap *Bitmap,
-			 s32 X,
-			 s32 Y,
-			 wide_s32 ActivePixelMask,
-			 weights Weights,
-			 color_triple Colors)
-{
-	wide_f32 Wide256 = wide_f32(255.999f);
-
-	wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0,
-								Colors.C0.g * Weights.W0,
-								Colors.C0.b * Weights.W0);
-	wide_v3 NewColor1 = wide_v3(Colors.C1.r * Weights.W1,
-								Colors.C1.g * Weights.W1,
-								Colors.C1.b * Weights.W1);
-	wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2,
-								Colors.C2.g * Weights.W2,
-								Colors.C2.b * Weights.W2);
-
-	NewColor0.r = Colors.C0.r * Weights.W0;
-
-	wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2;
-
-	NewColor.r = NewColor.r * Wide256;
-	NewColor.g = NewColor.g * Wide256;
-	NewColor.b = NewColor.b * Wide256;
-
-	wide_f32 Reds = NewColor.r;
-	wide_f32 Greens = NewColor.g;
-	wide_f32 Blues = NewColor.b;
-
-	wide_s32 NewReds = WideS32FromF32(Reds);
-	wide_s32 NewGreens = WideS32FromF32(Greens);
-	wide_s32 NewBlues = WideS32FromF32(Blues);
-
-	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
-	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
-	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
-
-	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
-	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);
-	wide_s32 OldBlues  = GatherS32(BasePixelPtr + 0, BYTES_PER_PIXEL, PixelIndices);
-
-	ConditionalAssign(&NewReds, ActivePixelMask, OldReds);
-	ConditionalAssign(&NewGreens, ActivePixelMask, OldGreens);
-	ConditionalAssign(&NewBlues, ActivePixelMask, OldBlues);
-
-	alignas(32) static s32 R[8];
-	alignas(32) static s32 G[8];
-	alignas(32) static s32 B[8];
-
 	_mm256_store_si256((__m256i *)&R[0], NewReds.V);
 	_mm256_store_si256((__m256i *)&G[0], NewGreens.V);
 	_mm256_store_si256((__m256i *)&B[0], NewBlues.V);
+#endif
 
-	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(G[0]), u8(B[0])});
-	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(G[1]), u8(B[1])});
-	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(G[2]), u8(B[2])});
-	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(G[3]), u8(B[3])});
-	SetPixel(Bitmap, X + 4, Y, color_u8{u8(R[4]), u8(G[4]), u8(B[4])});
-	SetPixel(Bitmap, X + 5, Y, color_u8{u8(R[5]), u8(G[5]), u8(B[5])});
-	SetPixel(Bitmap, X + 6, Y, color_u8{u8(R[6]), u8(G[6]), u8(B[6])});
-	SetPixel(Bitmap, X + 7, Y, color_u8{u8(R[7]), u8(G[7]), u8(B[7])});
+	for (u32 LaneIdx = 0; LaneIdx < SIMD_WIDTH; LaneIdx += 1)
+	{
+		SetPixel(Bitmap, X + LaneIdx, Y, 
+			color_u8{u8(R[LaneIdx]), u8(G[LaneIdx]), u8(B[LaneIdx])});
+	}
 }
 
 void
-UpdateDepth_8x(u32 *BaseDepthPtr,
-			   wide_s32 ActivePixelMask,
-			   wide_s32 OldDepth,
-			   wide_s32 NewDepth)
+UpdateDepth(u32 *BaseDepthPtr,
+		    wide_s32 ActivePixelMask,
+		    wide_s32 OldDepth,
+		    wide_s32 NewDepth)
 {
-	alignas(32) static u32 Depth[8];
+	alignas(SIMD_WIDTH * 4) static u32 Depth[SIMD_WIDTH];
 
 	ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
 
+#if (SIMD_WIDTH==4)
+	_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
+#elif (SIMD_WIDTH==8)
 	_mm256_store_si256((__m256i *)&Depth[0], NewDepth.V);
+#endif
 
 	CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
 }
-
-#endif
 
 void
 Draw(renderer_state *State,

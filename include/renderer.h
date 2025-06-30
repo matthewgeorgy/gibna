@@ -79,23 +79,8 @@ vertex 				*ClipTriangle(vertex *Triangle, v4 Equation, vertex *Result);
 vertex 				*ClipTriangle(vertex *Begin, vertex *End);
 
 // NOTE(matthew): SIMD specific code
-#if (SIMD_WIDTH==4)
-
-void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
-void				UpdateDepth_4x(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
-
-#define SetPixels	SetPixels_4x
-#define UpdateDepth	UpdateDepth_4x
-
-#elif (SIMD_WIDTH==8)
-
-void				SetPixels_8x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
-void				UpdateDepth_8x(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
-
-#define SetPixels	SetPixels_8x
-#define UpdateDepth	UpdateDepth_8x
-
-#endif
+void				SetPixels(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
+void				UpdateDepth(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
 
 #endif // __RENDERER_H__
 
