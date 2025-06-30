@@ -6,10 +6,10 @@
    - 4-wide SIMD (SSE)
    - Full transform (WVP + perspective + 1/z) pipeline
    - Perspective-correct interpolation
+   - Depth buffering
 
    TODO(matthew):
    - 8-wide SIMD (AVX)
-   - Depth buffering
    - Clipping
 */
 
@@ -303,11 +303,11 @@ RasterizeTriangle(bitmap *Bitmap,
 
 		for (s32 X = MinX; X < MaxX; X += edge::StepSizeX)
 		{
-			wide_s32 Mask = W0 | W1 | W2;
-			wide_s32 Comparison = Mask >= WideZero;
+			wide_s32 ColorMask = (W0 | W1 | W2) >= WideZero;
 
-			if (AnyTrue(Comparison))
+			if (AnyTrue(ColorMask))
 			{
+				// Barycentric weights
 				wide_f32 L0 = WideF32FromS32(W0 >> FP_SHIFT) * Triangle.V0.w;
 				wide_f32 L1 = WideF32FromS32(W1 >> FP_SHIFT) * Triangle.V1.w;
 				wide_f32 L2 = WideF32FromS32(W2 >> FP_SHIFT) * Triangle.V2.w;
@@ -319,13 +319,39 @@ RasterizeTriangle(bitmap *Bitmap,
 				Weights.W1 = L1 / Sum;
 				Weights.W2 = L2 / Sum;
 
-				color_triple Colors;
+				// Depth
+				wide_f32 Z = Weights.W0 * Triangle.V0.z + 
+							 Weights.W1 * Triangle.V1.z +
+							 Weights.W2 * Triangle.V2.z;
+				/* wide_f32 MaxDepthValue = WideF32FromS32(wide_s32(0x7FFFFFFF)); */
+				/* wide_s32 NewDepth = WideS32FromF32((wide_f32(0.5f) + wide_f32(0.5f) * Z) * MaxDepthValue); */
+				wide_f32 Step1 = wide_f32(0.5f) * Z;
+				wide_f32 Step2 = wide_f32(0.5f) + Step1;
+				wide_f32 Step3 = WideF32FromS32(wide_s32(0x7FFFFFFF));
+				wide_s32 NewDepth = WideS32FromF32(Step2 * Step3);
 
-				Colors.C0 = Triangle.Color0;
-				Colors.C1 = Triangle.Color1;
-				Colors.C2 = Triangle.Color2;
+				s32 DepthPixelCoord = X + Y * Bitmap->Width;
+				u32 *BaseDepthPtr = &Bitmap->DepthBuffer[DepthPixelCoord];
+				wide_s32 OldDepth = GatherS32(BaseDepthPtr, sizeof(u32), WIDE_S32_ZERO_TO_RANGE);
 
-				SetPixels_4x(Bitmap, X, Y, Comparison, Weights, Colors);
+				wide_s32 DepthMask = NewDepth < OldDepth;
+				wide_s32 ActivePixelMask = ColorMask & DepthMask;
+
+				if (AnyTrue(ActivePixelMask))
+				{
+					color_triple Colors;
+
+					Colors.C0 = Triangle.Color0;
+					Colors.C1 = Triangle.Color1;
+					Colors.C2 = Triangle.Color2;
+
+					SetPixels_4x(Bitmap, X, Y, ActivePixelMask, Weights, Colors);
+
+					alignas(16) static u32 Depth[4];
+					ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
+					_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
+					CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
+				}
 			}
 
 			W0 += E12.OneStepX;
@@ -466,7 +492,7 @@ SetPixels_4x(bitmap *Bitmap,
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
-	u8 *BasePixelPtr = &Bitmap->Memory[PixelCoord];
+	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
 
 	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
 	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);

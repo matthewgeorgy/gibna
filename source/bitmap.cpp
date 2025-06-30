@@ -13,7 +13,8 @@ AllocateBitmap(bitmap *Bitmap,
 	Bitmap->Height = Height;
 	Bitmap->Window = Window;
 	Bitmap->DC = GetDC(Window);
-	Bitmap->Memory = (u8 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
+	Bitmap->ColorBuffer = (u8 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
+	Bitmap->DepthBuffer = (u32 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
 
 	Bitmap->Info.bmiHeader.biSize = sizeof(Bitmap->Info.bmiHeader);
 	Bitmap->Info.bmiHeader.biWidth = Bitmap->Width;
@@ -29,7 +30,7 @@ PresentBitmap(bitmap Bitmap)
 	StretchDIBits(Bitmap.DC,
 		0, 0, Bitmap.Width, Bitmap.Height,
 		0, 0, Bitmap.Width, Bitmap.Height,
-		Bitmap.Memory, &Bitmap.Info, DIB_RGB_COLORS, SRCCOPY);
+		Bitmap.ColorBuffer, &Bitmap.Info, DIB_RGB_COLORS, SRCCOPY);
 }
 
 void 		
@@ -40,15 +41,19 @@ SetPixel(bitmap *Bitmap,
 {
 	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
 
-	Bitmap->Memory[PixelCoord + 0] = Color.b;
-	Bitmap->Memory[PixelCoord + 1] = Color.g;
-	Bitmap->Memory[PixelCoord + 2] = Color.r;
-	Bitmap->Memory[PixelCoord + 3] = 0;
+	Bitmap->ColorBuffer[PixelCoord + 0] = Color.b;
+	Bitmap->ColorBuffer[PixelCoord + 1] = Color.g;
+	Bitmap->ColorBuffer[PixelCoord + 2] = Color.r;
+	Bitmap->ColorBuffer[PixelCoord + 3] = 0;
 }
 
 void 		
 ClearBitmap(bitmap *Bitmap)
 {
-	ZeroMemory(Bitmap->Memory, Bitmap->Width * Bitmap->Height * BYTES_PER_PIXEL);
+	ZeroMemory(Bitmap->ColorBuffer, Bitmap->Width * Bitmap->Height * BYTES_PER_PIXEL);
+	for (s32 I = 0; I < Bitmap->Width * Bitmap->Height; I += 1)
+	{
+		Bitmap->DepthBuffer[I] = 0x7FFFFFFF;
+	}
 }
 
