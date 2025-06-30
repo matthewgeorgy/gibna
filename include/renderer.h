@@ -9,14 +9,17 @@
 #define SCR_WIDTH 	800
 #define SCR_HEIGHT 	600
 
+struct vertex
+{
+	v4		Pos;
+	v3		Color;
+};
+
 struct triangle
 {
-	v4		V0,
-			V1,
-			V2;
-	v3		Color0,
-			Color1,
-			Color2;
+	vertex		V0,
+				V1,
+				V2;
 };
 
 struct camera

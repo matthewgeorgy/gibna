@@ -7,9 +7,9 @@ RasterizeTriangle(bitmap *Bitmap,
 	s32				MinX, MaxX,
 					MinY, MaxY;
 
-	v2 RasterV0 = NdcToRaster(v2(Triangle.V0.x, Triangle.V0.y));
-	v2 RasterV1 = NdcToRaster(v2(Triangle.V1.x, Triangle.V1.y));
-	v2 RasterV2 = NdcToRaster(v2(Triangle.V2.x, Triangle.V2.y));
+	v2 RasterV0 = NdcToRaster(v2(Triangle.V0.Pos.x, Triangle.V0.Pos.y));
+	v2 RasterV1 = NdcToRaster(v2(Triangle.V1.Pos.x, Triangle.V1.Pos.y));
+	v2 RasterV2 = NdcToRaster(v2(Triangle.V2.Pos.x, Triangle.V2.Pos.y));
 
 	v2_fp V0 = v2_fp(RasterV0);
 	v2_fp V1 = v2_fp(RasterV1);
@@ -54,9 +54,9 @@ RasterizeTriangle(bitmap *Bitmap,
 			if (AnyTrue(ColorMask))
 			{
 				// Barycentric weights
-				wide_f32 L0 = WideF32FromS32(W0 >> FP_SHIFT) * Triangle.V0.w;
-				wide_f32 L1 = WideF32FromS32(W1 >> FP_SHIFT) * Triangle.V1.w;
-				wide_f32 L2 = WideF32FromS32(W2 >> FP_SHIFT) * Triangle.V2.w;
+				wide_f32 L0 = WideF32FromS32(W0 >> FP_SHIFT) * Triangle.V0.Pos.w;
+				wide_f32 L1 = WideF32FromS32(W1 >> FP_SHIFT) * Triangle.V1.Pos.w;
+				wide_f32 L2 = WideF32FromS32(W2 >> FP_SHIFT) * Triangle.V2.Pos.w;
 				wide_f32 Sum = L0 + L1 + L2;
 
 				weights Weights;
@@ -66,9 +66,9 @@ RasterizeTriangle(bitmap *Bitmap,
 				Weights.W2 = L2 / Sum;
 
 				// Depth
-				wide_f32 Z = Weights.W0 * Triangle.V0.z + 
-							 Weights.W1 * Triangle.V1.z +
-							 Weights.W2 * Triangle.V2.z;
+				wide_f32 Z = Weights.W0 * Triangle.V0.Pos.z + 
+							 Weights.W1 * Triangle.V1.Pos.z +
+							 Weights.W2 * Triangle.V2.Pos.z;
 				/* wide_f32 MaxDepthValue = WideF32FromS32(wide_s32(0x7FFFFFFF)); */
 				/* wide_s32 NewDepth = WideS32FromF32((wide_f32(0.5f) + wide_f32(0.5f) * Z) * MaxDepthValue); */
 				wide_f32 Step1 = wide_f32(0.5f) * Z;
@@ -87,9 +87,9 @@ RasterizeTriangle(bitmap *Bitmap,
 				{
 					color_triple Colors;
 
-					Colors.C0 = Triangle.Color0;
-					Colors.C1 = Triangle.Color1;
-					Colors.C2 = Triangle.Color2;
+					Colors.C0 = Triangle.V0.Color;
+					Colors.C1 = Triangle.V1.Color;
+					Colors.C2 = Triangle.V2.Color;
 
 					SetPixels_4x(Bitmap, X, Y, ActivePixelMask, Weights, Colors);
 
@@ -249,13 +249,9 @@ Draw(renderer_state *State,
 
 		triangle Triangle;
 
-		Triangle.V0 = PerspectiveDivide(T0);
-		Triangle.V1 = PerspectiveDivide(T1);
-		Triangle.V2 = PerspectiveDivide(T2);
-
-		Triangle.Color0 = Vertices[Idx0 + 1];
-		Triangle.Color1 = Vertices[Idx1 + 1];
-		Triangle.Color2 = Vertices[Idx2 + 1];
+		Triangle.V0 = { PerspectiveDivide(T0), Vertices[Idx0 + 1] };
+		Triangle.V1 = { PerspectiveDivide(T1), Vertices[Idx1 + 1] };
+		Triangle.V2 = { PerspectiveDivide(T2), Vertices[Idx2 + 1] };
 
 		RasterizeTriangle(State->Bitmap, Triangle);
 	}
@@ -286,13 +282,9 @@ DrawIndexed(renderer_state *State,
 
 		triangle Triangle;
 
-		Triangle.V0 = PerspectiveDivide(T0);
-		Triangle.V1 = PerspectiveDivide(T1);
-		Triangle.V2 = PerspectiveDivide(T2);
-
-		Triangle.Color0 = Vertices[Idx0 + 1];
-		Triangle.Color1 = Vertices[Idx1 + 1];
-		Triangle.Color2 = Vertices[Idx2 + 1];
+		Triangle.V0 = { PerspectiveDivide(T0), Vertices[Idx0 + 1] };
+		Triangle.V1 = { PerspectiveDivide(T1), Vertices[Idx1 + 1] };
+		Triangle.V2 = { PerspectiveDivide(T2), Vertices[Idx2 + 1] };
 
 		RasterizeTriangle(State->Bitmap, Triangle);
 	}
