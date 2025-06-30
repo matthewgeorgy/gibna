@@ -7,10 +7,13 @@
    - Full transform (WVP + perspective + 1/z) pipeline
    - Perspective-correct interpolation
    - Depth buffering
+   - Clipping
 
    TODO(matthew):
    - 8-wide SIMD (AVX)
-   - Clipping
+   - Fix edge artifacts
+   - Mesh loading
+   - Textures
 */
 
 #define _CRT_SECURE_NO_WARNINGS

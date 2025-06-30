@@ -239,21 +239,41 @@ Draw(renderer_state *State,
 		u32 Idx1 = Stride * (BaseID + 1);
 		u32 Idx2 = Stride * (BaseID + 2);
 
-		v3 V0 = Vertices[Idx0];
-		v3 V1 = Vertices[Idx1];
-		v3 V2 = Vertices[Idx2];
+		v3 Pos0 = Vertices[Idx0];
+		v3 Pos1 = Vertices[Idx1];
+		v3 Pos2 = Vertices[Idx2];
+		v3 Color0 = Vertices[Idx0 + 1];
+		v3 Color1 = Vertices[Idx1 + 1];
+		v3 Color2 = Vertices[Idx2 + 1];
 
-		v4 T0 = WVP * v4(V0.x, V0.y, V0.z, 1.0f);
-		v4 T1 = WVP * v4(V1.x, V1.y, V1.z, 1.0f);
-		v4 T2 = WVP * v4(V2.x, V2.y, V2.z, 1.0f);
+		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f);
+		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
+		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
 
-		triangle Triangle;
+		vertex ClippedVertices[12];
 
-		Triangle.V0 = { PerspectiveDivide(T0), Vertices[Idx0 + 1] };
-		Triangle.V1 = { PerspectiveDivide(T1), Vertices[Idx1 + 1] };
-		Triangle.V2 = { PerspectiveDivide(T2), Vertices[Idx2 + 1] };
+		ClippedVertices[0] = { T0, Color0 };
+		ClippedVertices[1] = { T1, Color1 };
+		ClippedVertices[2] = { T2, Color2 };
 
-		RasterizeTriangle(State->Bitmap, Triangle);
+		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
+
+		for (vertex *TriangleBegin = ClippedVertices;
+			 TriangleBegin != ClippedVerticesEnd;
+			 TriangleBegin += 3)
+		{
+			vertex V0 = TriangleBegin[0];
+			vertex V1 = TriangleBegin[1];
+			vertex V2 = TriangleBegin[2];
+
+			triangle Triangle;
+
+			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
+			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
+			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+
+			RasterizeTriangle(State->Bitmap, Triangle);
+		}
 	}
 }
 
