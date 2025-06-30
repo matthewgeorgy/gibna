@@ -22,6 +22,10 @@ RasterizeTriangle(bitmap *Bitmap,
 	MaxY = (s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT;
 
 	// Screen clipping
+	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
+	MinY = (MinY - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
+
+	// Screen clipping
 	MinX = Max(MinX, 0);
 	MaxX = Min(MaxX, SCR_WIDTH);
 	MinY = Max(MinY, 0);
@@ -66,7 +70,7 @@ RasterizeTriangle(bitmap *Bitmap,
 				Weights.W2 = L2 / Sum;
 
 				// Depth
-				wide_f32 Z = Weights.W0 * Triangle.V0.Pos.z + 
+				wide_f32 Z = Weights.W0 * Triangle.V0.Pos.z +
 							 Weights.W1 * Triangle.V1.Pos.z +
 							 Weights.W2 * Triangle.V2.Pos.z;
 				/* wide_f32 MaxDepthValue = WideF32FromS32(wide_s32(0x7FFFFFFF)); */
@@ -91,12 +95,9 @@ RasterizeTriangle(bitmap *Bitmap,
 					Colors.C1 = Triangle.V1.Color;
 					Colors.C2 = Triangle.V2.Color;
 
-					SetPixels_4x(Bitmap, X, Y, ActivePixelMask, Weights, Colors);
+					SetPixels(Bitmap, X, Y, ActivePixelMask, Weights, Colors);
 
-					alignas(16) static u32 Depth[4];
-					ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
-					_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
-					CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
+					UpdateDepth(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
 				}
 			}
 
@@ -163,10 +164,12 @@ edge::Init(const v2_fp &V0,
 	return (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
 }
 
+#if (SIMD_WIDTH==4)
+
 void
 SetPixels_4x(bitmap *Bitmap,
-			 s32 X, 
-			 s32 Y, 
+			 s32 X,
+			 s32 Y,
 			 wide_s32 ActivePixelMask,
 			 weights Weights,
 			 color_triple Colors)
@@ -225,8 +228,108 @@ SetPixels_4x(bitmap *Bitmap,
 	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(G[3]), u8(B[3])});
 }
 
-void				
-Draw(renderer_state *State, 
+void
+UpdateDepth_4x(u32 *BaseDepthPtr,
+			   wide_s32 ActivePixelMask,
+			   wide_s32 OldDepth,
+			   wide_s32 NewDepth)
+{
+	alignas(16) static u32 Depth[4];
+
+	ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
+
+	_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
+
+	CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
+}
+
+#elif (SIMD_WIDTH==8)
+
+void
+SetPixels_8x(bitmap *Bitmap,
+			 s32 X,
+			 s32 Y,
+			 wide_s32 ActivePixelMask,
+			 weights Weights,
+			 color_triple Colors)
+{
+	wide_f32 Wide256 = wide_f32(255.999f);
+
+	wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0,
+								Colors.C0.g * Weights.W0,
+								Colors.C0.b * Weights.W0);
+	wide_v3 NewColor1 = wide_v3(Colors.C1.r * Weights.W1,
+								Colors.C1.g * Weights.W1,
+								Colors.C1.b * Weights.W1);
+	wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2,
+								Colors.C2.g * Weights.W2,
+								Colors.C2.b * Weights.W2);
+
+	NewColor0.r = Colors.C0.r * Weights.W0;
+
+	wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2;
+
+	NewColor.r = NewColor.r * Wide256;
+	NewColor.g = NewColor.g * Wide256;
+	NewColor.b = NewColor.b * Wide256;
+
+	wide_f32 Reds = NewColor.r;
+	wide_f32 Greens = NewColor.g;
+	wide_f32 Blues = NewColor.b;
+
+	wide_s32 NewReds = WideS32FromF32(Reds);
+	wide_s32 NewGreens = WideS32FromF32(Greens);
+	wide_s32 NewBlues = WideS32FromF32(Blues);
+
+	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
+	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
+
+	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
+	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);
+	wide_s32 OldBlues  = GatherS32(BasePixelPtr + 0, BYTES_PER_PIXEL, PixelIndices);
+
+	ConditionalAssign(&NewReds, ActivePixelMask, OldReds);
+	ConditionalAssign(&NewGreens, ActivePixelMask, OldGreens);
+	ConditionalAssign(&NewBlues, ActivePixelMask, OldBlues);
+
+	alignas(32) static s32 R[8];
+	alignas(32) static s32 G[8];
+	alignas(32) static s32 B[8];
+
+	_mm256_store_si256((__m256i *)&R[0], NewReds.V);
+	_mm256_store_si256((__m256i *)&G[0], NewGreens.V);
+	_mm256_store_si256((__m256i *)&B[0], NewBlues.V);
+
+	SetPixel(Bitmap, X + 0, Y, color_u8{u8(R[0]), u8(G[0]), u8(B[0])});
+	SetPixel(Bitmap, X + 1, Y, color_u8{u8(R[1]), u8(G[1]), u8(B[1])});
+	SetPixel(Bitmap, X + 2, Y, color_u8{u8(R[2]), u8(G[2]), u8(B[2])});
+	SetPixel(Bitmap, X + 3, Y, color_u8{u8(R[3]), u8(G[3]), u8(B[3])});
+	SetPixel(Bitmap, X + 4, Y, color_u8{u8(R[4]), u8(G[4]), u8(B[4])});
+	SetPixel(Bitmap, X + 5, Y, color_u8{u8(R[5]), u8(G[5]), u8(B[5])});
+	SetPixel(Bitmap, X + 6, Y, color_u8{u8(R[6]), u8(G[6]), u8(B[6])});
+	SetPixel(Bitmap, X + 7, Y, color_u8{u8(R[7]), u8(G[7]), u8(B[7])});
+}
+
+void
+UpdateDepth_8x(u32 *BaseDepthPtr,
+			   wide_s32 ActivePixelMask,
+			   wide_s32 OldDepth,
+			   wide_s32 NewDepth)
+{
+	alignas(32) static u32 Depth[8];
+
+	ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
+
+	_mm256_store_si256((__m256i *)&Depth[0], NewDepth.V);
+
+	CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
+}
+
+#endif
+
+void
+Draw(renderer_state *State,
 	 u32 VertexCount)
 {
 	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
@@ -277,8 +380,8 @@ Draw(renderer_state *State,
 	}
 }
 
-void				
-DrawIndexed(renderer_state *State, 
+void
+DrawIndexed(renderer_state *State,
 			u32 IndexCount)
 {
 	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
@@ -330,8 +433,8 @@ DrawIndexed(renderer_state *State,
 	}
 }
 
-buffer 				
-CreateBuffer(void *Data, 
+buffer
+CreateBuffer(void *Data,
 			 u32 Size)
 {
 	buffer		Buffer;
@@ -343,7 +446,7 @@ CreateBuffer(void *Data,
 	return (Buffer);
 }
 
-v4					
+v4
 PerspectiveDivide(v4 V)
 {
 	v4		Result = V;
@@ -352,7 +455,7 @@ PerspectiveDivide(v4 V)
 	Result.x *= Result.w;
 	Result.y *= Result.w;
 	Result.z *= Result.w;
-	
+
 	return (Result);
 }
 

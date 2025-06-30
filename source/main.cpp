@@ -4,13 +4,13 @@
    - Subpixel precision
    - Incremental edge function computation
    - 4-wide SIMD (SSE)
+   - 8-wide SIMD (AVX)
    - Full transform (WVP + perspective + 1/z) pipeline
    - Perspective-correct interpolation
    - Depth buffering
    - Clipping
 
    TODO(matthew):
-   - 8-wide SIMD (AVX)
    - Fix edge artifacts
    - Mesh loading
    - Textures
@@ -44,7 +44,7 @@ main(void)
 
 	WndClass.cbSize = sizeof(WndClass);
 	WndClass.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
-	WndClass.lpszClassName = "FromageClassName";
+	WndClass.lpszClassName = "GibnaClassName";
 	WndClass.lpfnWndProc = &WndProc;
 	WndClass.hInstance = GetModuleHandle(NULL);
 

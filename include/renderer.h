@@ -47,7 +47,7 @@ struct renderer_state
 
 struct edge
 {
-	static const s32 StepSizeX = 4;
+	static const s32 StepSizeX = SIMD_WIDTH;
 	static const s32 StepSizeY = 1;
 
 	wide_s32 OneStepX;
@@ -67,7 +67,6 @@ s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
-void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
 v4					PerspectiveDivide(v4 V);
 void				Draw(renderer_state *State, u32 VertexCount);
 void				DrawIndexed(renderer_state *State, u32 IndexCount);
@@ -78,6 +77,25 @@ buffer 				CreateBuffer(void *Data, u32 Size);
 vertex				ClipIntersectEdge(vertex V0, vertex V1, f32 Value0, f32 Value1);
 vertex 				*ClipTriangle(vertex *Triangle, v4 Equation, vertex *Result);
 vertex 				*ClipTriangle(vertex *Begin, vertex *End);
+
+// NOTE(matthew): SIMD specific code
+#if (SIMD_WIDTH==4)
+
+void				SetPixels_4x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
+void				UpdateDepth_4x(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
+
+#define SetPixels	SetPixels_4x
+#define UpdateDepth	UpdateDepth_4x
+
+#elif (SIMD_WIDTH==8)
+
+void				SetPixels_8x(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
+void				UpdateDepth_8x(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
+
+#define SetPixels	SetPixels_8x
+#define UpdateDepth	UpdateDepth_8x
+
+#endif
 
 #endif // __RENDERER_H__
 
