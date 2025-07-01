@@ -1,9 +1,9 @@
 #include <bitmap.h>
 
-void		
-AllocateBitmap(bitmap *Bitmap, 
-			   HWND Window, 
-			   s32 Width, 
+void
+AllocateBitmap(bitmap *Bitmap,
+			   HWND Window,
+			   s32 Width,
 			   s32 Height)
 {
 	u32		BitmapMemorySize = Width * Height * BYTES_PER_PIXEL;
@@ -24,7 +24,7 @@ AllocateBitmap(bitmap *Bitmap,
 	Bitmap->Info.bmiHeader.biCompression = BI_RGB;
 }
 
-void 		
+void
 PresentBitmap(bitmap Bitmap)
 {
 	StretchDIBits(Bitmap.DC,
@@ -33,21 +33,19 @@ PresentBitmap(bitmap Bitmap)
 		Bitmap.ColorBuffer, &Bitmap.Info, DIB_RGB_COLORS, SRCCOPY);
 }
 
-void 		
+void
 SetPixel(bitmap *Bitmap,
-		 s32 X, 
-		 s32 Y, 
+		 s32 X,
+		 s32 Y,
 		 color_u8 Color)
 {
 	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+	u32 RGB = PackRGB(Color.r, Color.g, Color.b);
 
-	Bitmap->ColorBuffer[PixelCoord + 0] = Color.b;
-	Bitmap->ColorBuffer[PixelCoord + 1] = Color.g;
-	Bitmap->ColorBuffer[PixelCoord + 2] = Color.r;
-	Bitmap->ColorBuffer[PixelCoord + 3] = 0;
+	*(u32 *)(&Bitmap->ColorBuffer[PixelCoord]) = RGB;
 }
 
-void 		
+void
 ClearBitmap(bitmap *Bitmap)
 {
 	ZeroMemory(Bitmap->ColorBuffer, Bitmap->Width * Bitmap->Height * BYTES_PER_PIXEL);
@@ -55,5 +53,15 @@ ClearBitmap(bitmap *Bitmap)
 	{
 		Bitmap->DepthBuffer[I] = 0x7FFFFFFF;
 	}
+}
+
+u32
+PackRGB(u8 R,
+		u8 G,
+		u8 B)
+{
+	u32		RGB = (R << 16) | (G << 8) | (B << 0);
+
+	return (RGB);
 }
 

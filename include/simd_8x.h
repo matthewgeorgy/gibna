@@ -3,9 +3,7 @@
 
 #include <mg.h>
 
-#include <xmmintrin.h>
 #include <immintrin.h>
-#include <emmintrin.h>
 
 ///////////////////////////////////
 // s32_8x

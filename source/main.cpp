@@ -61,7 +61,7 @@ main(void)
 	WindowWidth = WindowDim.right - WindowDim.left;
 	WindowHeight = WindowDim.bottom - WindowDim.top;
 
-	Window = CreateWindowEx(0, WndClass.lpszClassName, "fromage",
+	Window = CreateWindowEx(0, WndClass.lpszClassName, "gibna",
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		WindowWidth, WindowHeight,
 		NULL, NULL, WndClass.hInstance, NULL);
@@ -173,7 +173,7 @@ main(void)
 			QueryPerformanceCounter(&Start);
 
 			// Cube 1
-			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, -12.5f);
+			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f);
 			State.WVP = Proj * View * World;
 			DrawIndexed(&State, _countof(Indices));
 
@@ -187,7 +187,7 @@ main(void)
 			PresentBitmap(Bitmap);
 
 			static CHAR Buffer[256];
-			sprintf(Buffer, "gibna --- %f ms / frame", (End.QuadPart - Start.QuadPart) / Freq);
+			sprintf(Buffer, "gibna (%d-wide) --- %f ms / frame", SIMD_WIDTH, (End.QuadPart - Start.QuadPart) / Freq);
 			SetWindowText(Window, Buffer);
 
 			Angle += 1.0f;

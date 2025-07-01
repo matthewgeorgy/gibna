@@ -27,6 +27,7 @@ void        ClearBitmap(bitmap *Bitmap);
 void        AllocateBitmap(bitmap *Bitmap, HWND Window, s32 Width, s32 Height);
 void        PresentBitmap(bitmap Bitmap);
 void        SetPixel(bitmap *Bitmap, s32 X, s32 Y, color_u8 Color);
+u32			PackRGB(u8 R, u8 G, u8 B);
 
 #endif // __BITMAP_H__
 
