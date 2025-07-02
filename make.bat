@@ -8,5 +8,7 @@ pushd build\
 
 cl %CPP_FLAGS% %CPP_SOURCE% user32.lib gdi32.lib
 
+REM clang++ ..\source\*.cpp -I ..\include -D SIMD_WIDTH=4 -mavx -march=haswell -luser32.lib -lgdi32.lib -O2 -g -o main.exe -Wno-endif-labels -fdiagnostics-absolute-paths
+
 popd
 
