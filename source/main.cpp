@@ -25,12 +25,15 @@
 #include <fixed_point.h>
 #include <simd.h>
 #include <renderer.h>
+#include <mesh.h>
 
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 int
 main(void)
 {
+	printf("%u\n", FP_SHIFT);
+	printf("%u\n", FP_MULTIPLIER);
 	///////////////////////////////////
 	// Win32
 
@@ -86,6 +89,7 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
+#if 1
 	f32 	Vertices[] =
 	{
 		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
@@ -100,29 +104,33 @@ main(void)
 	u32		Indices[] =
 	{
 		// front face
-		2, 1, 0,
-		3, 2, 0,
+		0, 1, 2,
+		0, 2, 3,
 
 		// back face
-		5, 6, 4,
-		6, 7, 4,
+		4, 6, 5,
+		4, 7, 6,
 
 		// left face
-		1, 5, 4,
-		0, 1, 4,
+		4, 5, 1,
+		4, 1, 0,
 
 		// right face
-		6, 2, 3,
-		7, 6, 3,
+		3, 2, 6,
+		3, 6, 7,
 
 		// top face
-		6, 5, 1,
-		2, 6, 1,
+		1, 5, 6,
+		1, 6, 2,
 
 		// bottom face
-		3, 0, 4,
-		7, 3, 4,
+		4, 0, 3, 
+		4, 3, 7
 	};
+#else
+	mesh Mesh;
+	LoadMesh(&Mesh, "assets/bunny.obj");
+#endif
 
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
 	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
@@ -173,14 +181,14 @@ main(void)
 			QueryPerformanceCounter(&Start);
 
 			// Cube 1
-			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f);
-			State.WVP = Proj * View * World;
-			DrawIndexed(&State, _countof(Indices));
+			/* World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f); */
+			/* State.WVP = Proj * View * World; */
+			/* DrawIndexed(&State, _countof(Indices)); */
 
 			// Cube 2
-			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(1.3f);
+			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(2.0f);
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, _countof(Indices));
+			DrawIndexed(&State, 36);
 
 			QueryPerformanceCounter(&End);
 

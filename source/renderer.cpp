@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <renderer.h>
 
 void
@@ -21,7 +22,7 @@ RasterizeTriangle(bitmap *Bitmap,
 	MinY = (s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT;
 	MaxY = (s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT;
 
-	// Screen clipping
+	// Align starting pixel to SIMD width
 	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
 	MinY = (MinY - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
 
@@ -34,12 +35,12 @@ RasterizeTriangle(bitmap *Bitmap,
 	// Initial edge function values
 	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
 	edge E01, E12, E20;
-	wide_s32 WideOne = wide_s32(1);
 	wide_s32 WideZero = wide_s32(0);
+	wide_s32 WideOne = wide_s32(1);
 
-	wide_s32 W0Row = E12.Init(V1, V2, Pixel);
-	wide_s32 W1Row = E20.Init(V2, V0, Pixel);
-	wide_s32 W2Row = E01.Init(V0, V1, Pixel);
+	wide_s32 W0Row = E12.Init(V2, V1, Pixel);
+	wide_s32 W1Row = E20.Init(V0, V2, Pixel);
+	wide_s32 W2Row = E01.Init(V1, V0, Pixel);
 
 	if (FillRule(V2 - V1))	W0Row -= WideOne;
 	if (FillRule(V0 - V2))	W1Row -= WideOne;
@@ -110,6 +111,7 @@ RasterizeTriangle(bitmap *Bitmap,
 		W1Row += E20.OneStepY;
 		W2Row += E01.OneStepY;
 	}
+
 }
 
 s32_fp
@@ -161,7 +163,9 @@ edge::Init(const v2_fp &V0,
 	wide_s32 X = wide_s32(P.x) + WIDE_S32_ZERO_TO_RANGE * wide_s32(FP_MULTIPLIER);
 	wide_s32 Y = wide_s32(P.y);
 
-	return (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
+	wide_s32 Ret = (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
+
+	return (Ret);
 }
 
 void
@@ -172,7 +176,7 @@ SetPixels(bitmap *Bitmap,
 		  weights Weights,
 		  color_triple Colors)
 {
-	wide_f32 Wide256 = wide_f32(255.999f);
+	wide_f32 Wide256 = wide_f32(255.0f);
 
 	wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0,
 								Colors.C0.g * Weights.W0,
@@ -232,9 +236,26 @@ SetPixels(bitmap *Bitmap,
 
 	for (u32 LaneIdx = 0; LaneIdx < SIMD_WIDTH; LaneIdx += 1)
 	{
-		SetPixel(Bitmap, X + LaneIdx, Y, 
+		SetPixel(Bitmap, X + LaneIdx, Y,
 			color_u8{u8(R[LaneIdx]), u8(G[LaneIdx]), u8(B[LaneIdx])});
 	}
+
+#if 0
+	for (s32 y = 0; y < Bitmap->Height; y += 1)
+	{
+		for (s32 x = 0; x < Bitmap->Width; x += 1)
+		{
+			s32 _PixelCoord = (x + y * Bitmap->Width) * BYTES_PER_PIXEL;
+			s32 _PixelValue = Bitmap->ColorBuffer[_PixelCoord];
+			if (_PixelValue != 0)
+			{
+				printf("First non-zero pixel at (%d,%d)\n", x, y);
+				exit(1);
+			}
+		}
+	}
+	exit(1);
+#endif
 }
 
 void
