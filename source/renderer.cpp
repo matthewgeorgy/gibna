@@ -216,7 +216,11 @@ SetPixels(bitmap *Bitmap,
 	alignas(4 * SIMD_WIDTH) static s32 G[SIMD_WIDTH];
 	alignas(4 * SIMD_WIDTH) static s32 B[SIMD_WIDTH];
 
-#if (SIMD_WIDTH==4)
+#if (SIMD_WIDTH==1)
+	R[0] = NewReds;
+	G[0] = NewGreens;
+	B[0] = NewBlues;
+#elif (SIMD_WIDTH==4)
 	_mm_store_si128((__m128i *)&R[0], NewReds.V);
 	_mm_store_si128((__m128i *)&G[0], NewGreens.V);
 	_mm_store_si128((__m128i *)&B[0], NewBlues.V);
@@ -243,7 +247,9 @@ UpdateDepth(u32 *BaseDepthPtr,
 
 	ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
 
-#if (SIMD_WIDTH==4)
+#if (SIMD_WIDTH==1)
+	Depth[0] = NewDepth;
+#elif (SIMD_WIDTH==4)
 	_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
 #elif (SIMD_WIDTH==8)
 	_mm256_store_si256((__m256i *)&Depth[0], NewDepth.V);
