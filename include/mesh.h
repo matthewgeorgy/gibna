@@ -11,7 +11,7 @@ struct mesh
 	/* array<u32>		Indices; */
 };
 
-b32		LoadMesh(mesh *Mesh, char *Filename);
+b32		LoadMesh(mesh *Mesh, const char *Filename);
 
 #endif // __MESH_H__
 

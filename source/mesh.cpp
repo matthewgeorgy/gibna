@@ -3,7 +3,7 @@
 
 b32		
 LoadMesh(mesh *Mesh,
-		 char *Filename)
+		 const char *Filename)
 {
 	FILE		*File;
 	b32			Success = TRUE;
