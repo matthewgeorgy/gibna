@@ -401,7 +401,7 @@ WideS32FromF32(f32_8x A)
 {
 	s32_8x		Result;
 
-	Result.V = _mm256_cvtps_epi32(A.V);
+	Result.V = _mm256_cvttps_epi32(A.V);
 
 	return (Result);
 }

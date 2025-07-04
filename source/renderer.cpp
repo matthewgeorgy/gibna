@@ -65,13 +65,13 @@ RasterizeTriangle(bitmap *Bitmap,
 				wide_f32 L0 = WideF32FromS32(W0 >> FP_SHIFT) * Triangle.V0.Pos.w;
 				wide_f32 L1 = WideF32FromS32(W1 >> FP_SHIFT) * Triangle.V1.Pos.w;
 				wide_f32 L2 = WideF32FromS32(W2 >> FP_SHIFT) * Triangle.V2.Pos.w;
-				wide_f32 Sum = L0 + L1 + L2;
+				wide_f32 InvSum = wide_f32(1) / (L0 + L1 + L2);
 
 				weights Weights;
 
-				Weights.W0 = L0 / Sum;
-				Weights.W1 = L1 / Sum;
-				Weights.W2 = L2 / Sum;
+				Weights.W0 = L0 * InvSum;
+				Weights.W1 = L1 * InvSum;
+				Weights.W2 = L2 * InvSum;
 
 				// Depth
 				wide_f32 Z = Weights.W0 * Triangle.V0.Pos.z +
