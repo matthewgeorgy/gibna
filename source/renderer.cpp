@@ -23,14 +23,17 @@ RasterizeTriangle(bitmap *Bitmap,
 	MaxY = (s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT;
 
 	// Align starting pixel to SIMD width
-	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
-	MinY = (MinY - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
+	// NOTE(matthew): apparently this slows things down a lot!!!
+	// Sorta makes sense I guess since it means we have to (potentially) evaluate 
+	// an extra second row of pixels per triangle, but twice as slow???
+	/* MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1); */
+	/* MinY = (MinY - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1); */
 
 	// Screen clipping
 	MinX = Max(MinX, 0);
-	MaxX = Min(MaxX, SCR_WIDTH);
+	MaxX = Min(MaxX, SCR_WIDTH - (SIMD_WIDTH - 1));
 	MinY = Max(MinY, 0);
-	MaxY = Min(MaxY, SCR_HEIGHT);
+	MaxY = Min(MaxY, SCR_HEIGHT - (SIMD_WIDTH - 1));
 
 	// Initial edge function values
 	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
@@ -42,9 +45,9 @@ RasterizeTriangle(bitmap *Bitmap,
 	wide_s32 W1Row = E20.Init(V0, V2, Pixel);
 	wide_s32 W2Row = E01.Init(V1, V0, Pixel);
 
-	if (FillRule(V2 - V1))	W0Row -= WideOne;
-	if (FillRule(V0 - V2))	W1Row -= WideOne;
-	if (FillRule(V1 - V0))	W2Row -= WideOne;
+	/* if (FillRule(V2 - V1))	W0Row -= WideOne; */
+	/* if (FillRule(V0 - V2))	W1Row -= WideOne; */
+	/* if (FillRule(V1 - V0))	W2Row -= WideOne; */
 
 	for (s32 Y = MinY; Y < MaxY; Y += edge::StepSizeY)
 	{
@@ -153,9 +156,9 @@ edge::Init(const v2_fp &V0,
 		   const v2_fp &V1,
 		   const v2_fp &P)
 {
-	s32 A = (V0.y - V1.y);
-	s32 B = (V1.x - V0.x);
-	s32 C = (V0.x * V1.y) - (V0.y * V1.x);
+	s32_fp A = (V0.y - V1.y);
+	s32_fp B = (V1.x - V0.x);
+	s32_fp C = (V0.x * V1.y) - (V0.y * V1.x);
 
 	this->OneStepX = wide_s32((A << FP_SHIFT) * StepSizeX);
 	this->OneStepY = wide_s32((B << FP_SHIFT) * StepSizeY);
@@ -304,30 +307,30 @@ Draw(renderer_state *State,
 		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
 		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
 
-		vertex ClippedVertices[12];
+		/* vertex ClippedVertices[12]; */
 
-		ClippedVertices[0] = { T0, Color0 };
-		ClippedVertices[1] = { T1, Color1 };
-		ClippedVertices[2] = { T2, Color2 };
+		/* ClippedVertices[0] = { T0, Color0 }; */
+		/* ClippedVertices[1] = { T1, Color1 }; */
+		/* ClippedVertices[2] = { T2, Color2 }; */
 
-		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
+		/* vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3); */
 
-		for (vertex *TriangleBegin = ClippedVertices;
-			 TriangleBegin != ClippedVerticesEnd;
-			 TriangleBegin += 3)
-		{
-			vertex V0 = TriangleBegin[0];
-			vertex V1 = TriangleBegin[1];
-			vertex V2 = TriangleBegin[2];
+		/* for (vertex *TriangleBegin = ClippedVertices; */
+		/* 	 TriangleBegin != ClippedVerticesEnd; */
+		/* 	 TriangleBegin += 3) */
+		/* { */
+		/* 	vertex V0 = TriangleBegin[0]; */
+		/* 	vertex V1 = TriangleBegin[1]; */
+		/* 	vertex V2 = TriangleBegin[2]; */
 
 			triangle Triangle;
 
-			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
-			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
-			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+			Triangle.V0 = { PerspectiveDivide(T0), Color0 };
+			Triangle.V1 = { PerspectiveDivide(T1), Color1 };
+			Triangle.V2 = { PerspectiveDivide(T2), Color2 };
 
 			RasterizeTriangle(State->Bitmap, Triangle);
-		}
+		/* } */
 	}
 }
 

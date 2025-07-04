@@ -14,6 +14,31 @@
    - Fix edge artifacts
    - Mesh loading
    - Textures
+
+   TODO(matthew): Quite a bit of important stuff needs to be addressed:
+   - For starters, the fixed-point arithmetic seems to be causing a lot of
+     artifacts in the bunny model, but not so much the cube. This happens both
+	 with scalar and SIMD code, so I probably need to write out some of the math
+	 to see what's going on.
+   - Currently, the scalar code is significantly faster than both the SSE and AVX
+     equivalents. When rendering the bunny with the current config, and compiling
+	 with full optimizations in clang, the average frametimes are as follows:
+	 - Scalar: 19-20 ms / frame
+	 - SSE: 40-45 ms / frame
+	 - AVX: 47-50 ms / frame
+     It seems that the problem might have to do with the operator* defined on the
+	 wide_s32 types, in both the SSE and AVX case. This appear to be taking a
+	 large amount of time according to both VerySleepy and VTune. According to
+	 the Intel intrinsics guide, their internal instructions (_mm_mullo_epi32 and
+	 _mm256_mullo_epi32) both have a rather high latency of 10, at least on
+	 Haswell. This would probably explain why the SIMD code is so much slower,
+	 so I'll need to test on the laptop as well.
+   - Applying the edge fill-rule also causes a bit of artifacting too, even with
+     fixed-point arithmetic disabled. Gonna have to see what's going on here...
+   - Clipping was also removed from Draw() since it's not super necessary for
+     this model and slows us down quite a bit. It will definitely come back later
+	 but I'm just trying to minimize the surface area of what could be causing
+	 any slowdowns.
 */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -89,7 +114,7 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-#if 1
+#if 0
 	f32 	Vertices[] =
 	{
 		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
@@ -129,11 +154,12 @@ main(void)
 	};
 #else
 	mesh Mesh;
-	LoadMesh(&Mesh, "assets/bunny.obj");
+	const char *Filename = "assets/bunny.obj";
+	LoadMesh(&Mesh, Filename);
 #endif
 
-	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
-	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
+	buffer VertexBuffer = CreateBuffer(Mesh.Vertices.Data, Mesh.Vertices.ByteSize());
+	/* buffer IndexBuffer = CreateBuffer(Mesh.Indices.Data, Mesh.Indices.ByteSize()); */
 
 	///////////////////////////////////
 	// Main loop
@@ -153,7 +179,7 @@ main(void)
 	Freq = Frequency.QuadPart / 1000.0f;
 
 	State.VertexBuffer = VertexBuffer;
-	State.IndexBuffer = IndexBuffer;
+	/* State.IndexBuffer = IndexBuffer; */
 	State.Bitmap = &Bitmap;
 
 	Camera.Pos = v3(0, 3, -8);
@@ -188,7 +214,7 @@ main(void)
 			// Cube 2
 			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(2.0f);
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, 36);
+			Draw(&State, Mesh.Vertices.Len() / 2);
 
 			QueryPerformanceCounter(&End);
 
