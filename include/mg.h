@@ -65,7 +65,7 @@ typedef s32					b32;
 #define RadsToDegs(__a)		((__a) * 57.29578f)
 #define Min(__a, __b)		((__a) < (__b) ? (__a) : (__b))
 #define Max(__a, __b)		((__a) > (__b) ? (__a) : (__b))
-#define PI 					3.141592653589793
+#define PI 					3.141592653589793f
 #define INV_PI				(1.0f / PI)
 
 ////////////////////////////////////////

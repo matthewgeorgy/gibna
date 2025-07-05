@@ -86,52 +86,59 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-#if 1
-	f32 	Vertices[] =
+	array<v3>		Vertices;
+	array<u32>		Indices;
+
+	s32 SectorCount = 36;
+	s32 StackCount = 18;
+	f32 SectorStep = (2 * PI) / f32(SectorCount);
+	f32 StackStep = PI / f32(StackCount);
+	f32 SectorAngle, StackAngle;
+
+	for (s32 i = 0; i <= StackCount; i += 1)
 	{
-		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,	1.0f, 1.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,	0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,	1.0f, 1.0f, 1.0f,
-	};
-	u32		Indices[] =
+		StackAngle = (PI / 2) - (i * StackStep);
+
+		f32 XY = Cos(StackAngle);
+		f32 Z = Sin(StackAngle);
+
+		for (s32 j = 0; j <= SectorCount; j += 1)
+		{
+			SectorAngle = j * SectorStep;
+
+			f32 X = XY * Cos(SectorAngle);
+			f32 Y = XY * Sin(SectorAngle);
+
+			Vertices.Push(v3(X, Y, Z));
+
+			Vertices.Push(v3(Abs(X), Abs(Y), Abs(Z)));
+		}
+	}
+
+	for (s32 i = 0; i < StackCount; i += 1)
 	{
-		// front face
-		0, 1, 2,
-		0, 2, 3,
+		s32 k1 = i * (SectorCount + 1);
+		s32 k2 = k1 + (SectorCount + 1);
 
-		// back face
-		4, 6, 5,
-		4, 7, 6,
+		for (s32 j = 0; j < SectorCount; j += 1, k1 += 1, k2 += 1)
+		{
+			if (i != 0)
+			{
+				Indices.Push(k1);
+				Indices.Push(k2);
+				Indices.Push(k1 + 1);
+			}
+			if (i != (StackCount - 1))
+			{
+				Indices.Push(k1 + 1);
+				Indices.Push(k2);
+				Indices.Push(k2 + 1);
+			}
+		}
+	}
 
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-
-		// bottom face
-		4, 0, 3, 
-		4, 3, 7
-	};
-#else
-	mesh Mesh;
-	const char *Filename = "assets/cube.obj";
-	LoadMesh(&Mesh, Filename);
-#endif
-
-	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
-	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
+	buffer VertexBuffer = CreateBuffer(Vertices.Data, Vertices.ByteSize());
+	buffer IndexBuffer = CreateBuffer(Indices.Data, Indices.ByteSize());
 
 	///////////////////////////////////
 	// Timers
@@ -191,14 +198,14 @@ main(void)
 			QueryPerformanceCounter(&Start);
 
 			// Cube 1
-			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f);
-			State.WVP = Proj * View * World;
-			DrawIndexed(&State, _countof(Indices));
+			/* World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f); */
+			/* State.WVP = Proj * View * World; */
+			/* DrawIndexed(&State, Indices.Len()); */
 
 			// Cube 2
 			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(1.3f);
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, _countof(Indices));
+			DrawIndexed(&State, Indices.Len());
 
 			PresentBitmap(Bitmap);
 
