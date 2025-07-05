@@ -101,7 +101,7 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-#if 0
+#if 1
 	f32 	Vertices[] =
 	{
 		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
@@ -145,8 +145,8 @@ main(void)
 	LoadMesh(&Mesh, Filename);
 #endif
 
-	buffer VertexBuffer = CreateBuffer(Mesh.Vertices.Data, Mesh.Vertices.ByteSize());
-	/* buffer IndexBuffer = CreateBuffer(Mesh.Indices.Data, Mesh.Indices.ByteSize()); */
+	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
+	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
 
 	///////////////////////////////////
 	// Main loop
@@ -166,7 +166,7 @@ main(void)
 	Freq = Frequency.QuadPart / 1000.0f;
 
 	State.VertexBuffer = VertexBuffer;
-	/* State.IndexBuffer = IndexBuffer; */
+	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
 
 	Camera.Pos = v3(0, 3, -8);
@@ -194,14 +194,14 @@ main(void)
 			QueryPerformanceCounter(&Start);
 
 			// Cube 1
-			/* World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f); */
-			/* State.WVP = Proj * View * World; */
-			/* DrawIndexed(&State, _countof(Indices)); */
+			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f);
+			State.WVP = Proj * View * World;
+			DrawIndexed(&State, _countof(Indices));
 
 			// Cube 2
-			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(2.0f);
+			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(1.3f);
 			State.WVP = Proj * View * World;
-			Draw(&State, Mesh.Vertices.Len() / 2);
+			DrawIndexed(&State, _countof(Indices));
 
 			QueryPerformanceCounter(&End);
 

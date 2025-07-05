@@ -45,9 +45,9 @@ RasterizeTriangle(bitmap *Bitmap,
 	wide_s32 W1Row = E20.Init(V0, V2, Pixel);
 	wide_s32 W2Row = E01.Init(V1, V0, Pixel);
 
-	/* if (FillRule(V2 - V1))	W0Row -= WideOne; */
-	/* if (FillRule(V0 - V2))	W1Row -= WideOne; */
-	/* if (FillRule(V1 - V0))	W2Row -= WideOne; */
+	if (FillRule(V2 - V1))	W0Row -= WideOne;
+	if (FillRule(V0 - V2))	W1Row -= WideOne;
+	if (FillRule(V1 - V0))	W2Row -= WideOne;
 
 	for (s32 Y = MinY; Y < MaxY; Y += edge::StepSizeY)
 	{
@@ -114,7 +114,6 @@ RasterizeTriangle(bitmap *Bitmap,
 		W1Row += E20.OneStepY;
 		W2Row += E01.OneStepY;
 	}
-
 }
 
 s32_fp
@@ -307,30 +306,30 @@ Draw(renderer_state *State,
 		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
 		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
 
-		/* vertex ClippedVertices[12]; */
+		vertex ClippedVertices[12];
 
-		/* ClippedVertices[0] = { T0, Color0 }; */
-		/* ClippedVertices[1] = { T1, Color1 }; */
-		/* ClippedVertices[2] = { T2, Color2 }; */
+		ClippedVertices[0] = { T0, Color0 };
+		ClippedVertices[1] = { T1, Color1 };
+		ClippedVertices[2] = { T2, Color2 };
 
-		/* vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3); */
+		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
 
-		/* for (vertex *TriangleBegin = ClippedVertices; */
-		/* 	 TriangleBegin != ClippedVerticesEnd; */
-		/* 	 TriangleBegin += 3) */
-		/* { */
-		/* 	vertex V0 = TriangleBegin[0]; */
-		/* 	vertex V1 = TriangleBegin[1]; */
-		/* 	vertex V2 = TriangleBegin[2]; */
+		for (vertex *TriangleBegin = ClippedVertices;
+			 TriangleBegin != ClippedVerticesEnd;
+			 TriangleBegin += 3)
+		{
+			vertex V0 = TriangleBegin[0];
+			vertex V1 = TriangleBegin[1];
+			vertex V2 = TriangleBegin[2];
 
 			triangle Triangle;
 
-			Triangle.V0 = { PerspectiveDivide(T0), Color0 };
-			Triangle.V1 = { PerspectiveDivide(T1), Color1 };
-			Triangle.V2 = { PerspectiveDivide(T2), Color2 };
+			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
+			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
+			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
 
 			RasterizeTriangle(State->Bitmap, Triangle);
-		/* } */
+		}
 	}
 }
 

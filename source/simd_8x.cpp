@@ -371,8 +371,9 @@ ConditionalAssign(s32_8x *Dest,
 				  s32_8x Mask,
 				  s32_8x Source)
 {
-	Dest->V = _mm256_or_si256(_mm256_and_si256(Mask.V, Dest->V),
-							  _mm256_andnot_si256(Mask.V, Source.V));
+	/* Dest->V = _mm256_or_si256(_mm256_and_si256(Mask.V, Dest->V), */
+	/* 						  _mm256_andnot_si256(Mask.V, Source.V)); */
+	Dest->V = _mm256_blendv_epi8(Source.V, Dest->V, Mask.V);
 }
 
 s32_8x
