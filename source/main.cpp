@@ -134,21 +134,32 @@ main(void)
 	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
 
 	///////////////////////////////////
+	// Timers
+
+	LARGE_INTEGER		Time, Frequency;
+	s64					UpdateTitle;
+	f32					TicksPerMillisecond;
+	u32					FrameCount = 0;
+	s64					TotalRenderingTime = 0;
+
+
+	QueryPerformanceFrequency(&Frequency);
+	QueryPerformanceCounter(&Time);
+
+	UpdateTitle = Time.QuadPart + Frequency.QuadPart / 2;
+	TicksPerMillisecond = Frequency.QuadPart / 1000.0f;
+
+	///////////////////////////////////
 	// Main loop
 
 	MSG					Message;
 	f32 				Angle = 0;
-	LARGE_INTEGER		Start, End, Frequency;
-	f32					Freq;
 	renderer_state		State;
 	camera				Camera;
 	m4 					World,
 						View,
 						Proj;
 
-
-	QueryPerformanceFrequency(&Frequency);
-	Freq = Frequency.QuadPart / 1000.0f;
 
 	State.VertexBuffer = VertexBuffer;
 	State.IndexBuffer = IndexBuffer;
@@ -176,6 +187,7 @@ main(void)
 		{
 			ClearBitmap(&Bitmap);
 
+			LARGE_INTEGER Start, End;
 			QueryPerformanceCounter(&Start);
 
 			// Cube 1
@@ -188,15 +200,28 @@ main(void)
 			State.WVP = Proj * View * World;
 			DrawIndexed(&State, _countof(Indices));
 
-			QueryPerformanceCounter(&End);
-
 			PresentBitmap(Bitmap);
 
-			static CHAR Buffer[256];
-			sprintf(Buffer, "gibna (%d-wide) --- %f ms / frame", SIMD_WIDTH, (End.QuadPart - Start.QuadPart) / Freq);
-			SetWindowText(Window, Buffer);
+			Angle += 0.1f;
 
-			Angle += 1.0f;
+			FrameCount += 1;
+
+			QueryPerformanceCounter(&End);
+
+			TotalRenderingTime += (End.QuadPart - Start.QuadPart);
+
+			if (End.QuadPart >= UpdateTitle)
+			{
+				UpdateTitle = End.QuadPart + Frequency.QuadPart / 2;
+				f32 MillisecondsPerFrame = TotalRenderingTime / (f32(FrameCount) * TicksPerMillisecond);
+				Time = End;
+				FrameCount = 0;
+				TotalRenderingTime = 0;
+
+				static CHAR Title[256];
+				sprintf(Title, "gibna (%d-wide) --- %f ms / frame", SIMD_WIDTH, MillisecondsPerFrame);
+				SetWindowText(Window, Title);
+			}
 		}
 	}
 

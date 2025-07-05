@@ -81,12 +81,8 @@ RasterizeTriangle(bitmap *Bitmap,
 				wide_f32 Z = Weights.W0 * Triangle.V0.Pos.z +
 							 Weights.W1 * Triangle.V1.Pos.z +
 							 Weights.W2 * Triangle.V2.Pos.z;
-				/* wide_f32 MaxDepthValue = WideF32FromS32(wide_s32(0x7FFFFFFF)); */
-				/* wide_s32 NewDepth = WideS32FromF32((wide_f32(0.5f) + wide_f32(0.5f) * Z) * MaxDepthValue); */
-				wide_f32 Step1 = wide_f32(0.5f) * Z;
-				wide_f32 Step2 = wide_f32(0.5f) + Step1;
-				wide_f32 Step3 = WideF32FromS32(wide_s32(0x7FFFFFFF));
-				wide_s32 NewDepth = WideS32FromF32(Step2 * Step3);
+				wide_f32 MaxDepthValue = WideF32FromS32(wide_s32(0x7FFFFFFF));
+				wide_s32 NewDepth = WideS32FromF32((wide_f32(0.5f) + wide_f32(0.5f) * Z) * MaxDepthValue);
 
 				s32 DepthPixelCoord = X + Y * Bitmap->Width;
 				u32 *BaseDepthPtr = &Bitmap->DepthBuffer[DepthPixelCoord];
@@ -169,9 +165,9 @@ edge::Init(const v2_fp &V0,
 	wide_s32 X = wide_s32(P.x) + WIDE_S32_ZERO_TO_RANGE * wide_s32(FP_MULTIPLIER);
 	wide_s32 Y = wide_s32(P.y);
 
-	wide_s32 Ret = (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
+	wide_s32 InitialEdgeValue = (wide_s32(A) * X + wide_s32(B) * Y + wide_s32(C));
 
-	return (Ret);
+	return (InitialEdgeValue);
 }
 
 void
@@ -182,7 +178,7 @@ SetPixels(bitmap *Bitmap,
 		  weights Weights,
 		  color_triple Colors)
 {
-	wide_f32 Wide256 = wide_f32(255.0f);
+	wide_f32 Wide255 = wide_f32(255.0f);
 
 	wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0,
 								Colors.C0.g * Weights.W0,
@@ -194,21 +190,15 @@ SetPixels(bitmap *Bitmap,
 								Colors.C2.g * Weights.W2,
 								Colors.C2.b * Weights.W2);
 
-	NewColor0.r = Colors.C0.r * Weights.W0;
-
 	wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2;
 
-	NewColor.r = NewColor.r * Wide256;
-	NewColor.g = NewColor.g * Wide256;
-	NewColor.b = NewColor.b * Wide256;
+	wide_f32 Reds   = NewColor.r * Wide255;
+	wide_f32 Greens = NewColor.g * Wide255;
+	wide_f32 Blues  = NewColor.b * Wide255;
 
-	wide_f32 Reds = NewColor.r;
-	wide_f32 Greens = NewColor.g;
-	wide_f32 Blues = NewColor.b;
-
-	wide_s32 NewReds = WideS32FromF32(Reds);
+	wide_s32 NewReds   = WideS32FromF32(Reds);
 	wide_s32 NewGreens = WideS32FromF32(Greens);
-	wide_s32 NewBlues = WideS32FromF32(Blues);
+	wide_s32 NewBlues  = WideS32FromF32(Blues);
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
@@ -245,23 +235,6 @@ SetPixels(bitmap *Bitmap,
 		SetPixel(Bitmap, X + LaneIdx, Y,
 			color_u8{u8(R[LaneIdx]), u8(G[LaneIdx]), u8(B[LaneIdx])});
 	}
-
-#if 0
-	for (s32 y = 0; y < Bitmap->Height; y += 1)
-	{
-		for (s32 x = 0; x < Bitmap->Width; x += 1)
-		{
-			s32 _PixelCoord = (x + y * Bitmap->Width) * BYTES_PER_PIXEL;
-			s32 _PixelValue = Bitmap->ColorBuffer[_PixelCoord];
-			if (_PixelValue != 0)
-			{
-				printf("First non-zero pixel at (%d,%d)\n", x, y);
-				exit(1);
-			}
-		}
-	}
-	exit(1);
-#endif
 }
 
 void
