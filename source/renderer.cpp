@@ -28,18 +28,16 @@ RasterizeTriangle(bitmap *Bitmap,
 	MinY = ((s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT);
 	MaxY = ((s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT) + 1;
 
-	// Align starting pixel to SIMD width
-	// NOTE(matthew): apparently this slows things down a lot!!!
-	// Sorta makes sense I guess since it means we have to (potentially) evaluate 
-	// an extra second row of pixels per triangle, but twice as slow???
-	/* MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1); */
-	/* MinY = (MinY - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1); */
+	// Align (round DOWN) starting pixel in X to SIMD width to prevent 
+	// overwriting into the next row.
+	// Eg, if MinX = 13 and SIMD_WIDTH=4, then new MinX = 12.
+	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
 
 	// Screen clipping
 	MinX = Max(MinX, 0);
-	MaxX = Min(MaxX, SCR_WIDTH - (SIMD_WIDTH - 1));
+	MaxX = Min(MaxX, SCR_WIDTH);
 	MinY = Max(MinY, 0);
-	MaxY = Min(MaxY, SCR_HEIGHT - (SIMD_WIDTH - 1));
+	MaxY = Min(MaxY, SCR_HEIGHT);
 
 	// Initial edge function values
 	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
