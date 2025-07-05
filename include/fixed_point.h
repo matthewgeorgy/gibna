@@ -3,7 +3,7 @@
 
 #include <mg.h>
 
-#define FP_SHIFT		0
+#define FP_SHIFT		4
 #define FP_MULTIPLIER	(1 << FP_SHIFT)
 
 typedef s32		s32_fp;

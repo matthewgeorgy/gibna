@@ -11,21 +11,8 @@
    - Clipping
 
    TODO(matthew):
-   - Fix edge artifacts
    - Mesh loading
    - Textures
-
-   TODO(matthew): Quite a bit of important stuff needs to be addressed:
-   - For starters, the fixed-point arithmetic seems to be causing a lot of
-     artifacts in the bunny model, but not so much the cube. This happens both
-	 with scalar and SIMD code, so I probably need to write out some of the math
-	 to see what's going on.
-   - Applying the edge fill-rule also causes a bit of artifacting too, even with
-     fixed-point arithmetic disabled. Gonna have to see what's going on here...
-   - Clipping was also removed from Draw() since it's not super necessary for
-     this model and slows us down quite a bit. It will definitely come back later
-	 but I'm just trying to minimize the surface area of what could be causing
-	 any slowdowns.
 */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -44,8 +31,6 @@ LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 int
 main(void)
 {
-	printf("%u\n", FP_SHIFT);
-	printf("%u\n", FP_MULTIPLIER);
 	///////////////////////////////////
 	// Win32
 

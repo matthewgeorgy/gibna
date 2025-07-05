@@ -17,10 +17,16 @@ RasterizeTriangle(bitmap *Bitmap,
 	v2_fp V2 = v2_fp(RasterV2);
 
 	// Triangle bounding box
-	MinX = (s32)(Min(Min(V0.x, V1.x), V2.x)) >> FP_SHIFT;
-	MaxX = (s32)(Max(Max(V0.x, V1.x), V2.x)) >> FP_SHIFT;
-	MinY = (s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT;
-	MaxY = (s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT;
+	// NOTE(matthew): Fixed-point was causing artifacting due to us (potentially)
+    // skipping over the last pixel in the row. This is because if the fractional
+	// part is sufficiently large, it means that we should be shading this pixel;
+	// but shifting removes this information.
+	// Thus, we simply add a +1 offset to "pad" the triangle by one row and
+	// one column.
+	MinX = ((s32)(Min(Min(V0.x, V1.x), V2.x)) >> FP_SHIFT);
+	MaxX = ((s32)(Max(Max(V0.x, V1.x), V2.x)) >> FP_SHIFT) + 1;
+	MinY = ((s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT);
+	MaxY = ((s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT) + 1;
 
 	// Align starting pixel to SIMD width
 	// NOTE(matthew): apparently this slows things down a lot!!!
@@ -62,9 +68,9 @@ RasterizeTriangle(bitmap *Bitmap,
 			if (AnyTrue(ColorMask))
 			{
 				// Barycentric weights
-				wide_f32 L0 = WideF32FromS32(W0 >> FP_SHIFT) * Triangle.V0.Pos.w;
-				wide_f32 L1 = WideF32FromS32(W1 >> FP_SHIFT) * Triangle.V1.Pos.w;
-				wide_f32 L2 = WideF32FromS32(W2 >> FP_SHIFT) * Triangle.V2.Pos.w;
+				wide_f32 L0 = WideF32FromS32(W0) * Triangle.V0.Pos.w;
+				wide_f32 L1 = WideF32FromS32(W1) * Triangle.V1.Pos.w;
+				wide_f32 L2 = WideF32FromS32(W2) * Triangle.V2.Pos.w;
 				wide_f32 InvSum = wide_f32(1) / (L0 + L1 + L2);
 
 				weights Weights;
