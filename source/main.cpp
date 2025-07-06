@@ -27,6 +27,7 @@
 #include <mesh.h>
 
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+void				GenerateSphere(array<v3> *Vertices, array<u32> *Indices);
 
 int
 main(void)
@@ -86,59 +87,22 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-	array<v3>		Vertices;
-	array<u32>		Indices;
-
-	s32 SectorCount = 36;
-	s32 StackCount = 18;
-	f32 SectorStep = (2 * PI) / f32(SectorCount);
-	f32 StackStep = PI / f32(StackCount);
-	f32 SectorAngle, StackAngle;
-
-	for (s32 i = 0; i <= StackCount; i += 1)
+	f32		Vertices[] =
 	{
-		StackAngle = (PI / 2) - (i * StackStep);
-
-		f32 XY = Cos(StackAngle);
-		f32 Z = Sin(StackAngle);
-
-		for (s32 j = 0; j <= SectorCount; j += 1)
-		{
-			SectorAngle = j * SectorStep;
-
-			f32 X = XY * Cos(SectorAngle);
-			f32 Y = XY * Sin(SectorAngle);
-
-			Vertices.Push(v3(X, Y, Z));
-
-			Vertices.Push(v3(Abs(X), Abs(Y), Abs(Z)));
-		}
-	}
-
-	for (s32 i = 0; i < StackCount; i += 1)
+		-0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f, 0.5f,		0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, 0.5f,		0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f, 1.0f, 
+	};
+	u32		Indices[] =
 	{
-		s32 k1 = i * (SectorCount + 1);
-		s32 k2 = k1 + (SectorCount + 1);
+		0, 1, 2,
+		0, 2, 3,
+	};
 
-		for (s32 j = 0; j < SectorCount; j += 1, k1 += 1, k2 += 1)
-		{
-			if (i != 0)
-			{
-				Indices.Push(k1);
-				Indices.Push(k2);
-				Indices.Push(k1 + 1);
-			}
-			if (i != (StackCount - 1))
-			{
-				Indices.Push(k1 + 1);
-				Indices.Push(k2);
-				Indices.Push(k2 + 1);
-			}
-		}
-	}
 
-	buffer VertexBuffer = CreateBuffer(Vertices.Data, Vertices.ByteSize());
-	buffer IndexBuffer = CreateBuffer(Indices.Data, Indices.ByteSize());
+	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
+	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
 
 	///////////////////////////////////
 	// Timers
@@ -172,7 +136,7 @@ main(void)
 	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
 
-	Camera.Pos = v3(0, 3, -8);
+	Camera.Pos = v3(0, 0, -2);
 	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
 
@@ -197,15 +161,9 @@ main(void)
 			LARGE_INTEGER Start, End;
 			QueryPerformanceCounter(&Start);
 
-			// Cube 1
-			/* World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 2.5f); */
-			/* State.WVP = Proj * View * World; */
-			/* DrawIndexed(&State, Indices.Len()); */
-
-			// Cube 2
-			World = Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Scale(1.3f);
+			World = Mat4Identity();
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, Indices.Len());
+			DrawIndexed(&State, _countof(Indices));
 
 			PresentBitmap(Bitmap);
 
@@ -269,5 +227,60 @@ WndProc(HWND hWnd,
 	}
 
 	return (Result);
+}
+
+void				
+GenerateSphere(array<v3> *Vertices,
+			   array<u32> *Indices)
+{
+	s32 SectorCount = 12;
+	s32 StackCount = 6;
+	f32 SectorStep = (2 * PI) / f32(SectorCount);
+	f32 StackStep = PI / f32(StackCount);
+	f32 SectorAngle, StackAngle;
+
+	for (s32 i = 0; i <= StackCount; i += 1)
+	{
+		StackAngle = (PI / 2) - (i * StackStep);
+
+		f32 XY = Cos(StackAngle);
+		f32 Z = Sin(StackAngle);
+
+		for (s32 j = 0; j <= SectorCount; j += 1)
+		{
+			SectorAngle = j * SectorStep;
+
+			f32 X = XY * Cos(SectorAngle);
+			f32 Y = XY * Sin(SectorAngle);
+
+			// Vertex
+			Vertices->Push(v3(X, Y, Z));
+
+			// Normal
+			Vertices->Push(v3(Abs(X), Abs(Y), Abs(Z)));
+		}
+	}
+
+	for (s32 i = 0; i < StackCount; i += 1)
+	{
+		s32 k1 = i * (SectorCount + 1);
+		s32 k2 = k1 + (SectorCount + 1);
+
+		for (s32 j = 0; j < SectorCount; j += 1, k1 += 1, k2 += 1)
+		{
+			if (i != 0)
+			{
+				Indices->Push(k1);
+				Indices->Push(k2);
+				Indices->Push(k1 + 1);
+			}
+			if (i != (StackCount - 1))
+			{
+				Indices->Push(k1 + 1);
+				Indices->Push(k2);
+				Indices->Push(k2 + 1);
+			}
+		}
+	}
 }
 
