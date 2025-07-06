@@ -24,6 +24,18 @@ GatherS32(void *BasePtr,
 }
 
 s32
+GatherU8(void *BasePtr,
+		 u32 Stride,
+		 s32 Index)
+{
+	s32 Value;
+
+	Value = s32(*((u8 *)BasePtr + Stride * Index));
+
+	return (Value);
+}
+
+s32
 WideS32FromF32(f32 A)
 {
 	return (s32(A));

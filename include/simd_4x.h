@@ -106,6 +106,7 @@ v3_4x		operator-(v3_4x A, v3_4x B);
 // Out    : 7   5   9   6 
 void		ConditionalAssign(s32_4x *Dest, s32_4x Mask, s32_4x Source);
 s32_4x 		GatherS32(void *BasePtr, u32 Stride, s32_4x Indices);
+s32_4x 		GatherU8(void *BasePtr, u32 Stride, s32_4x Indices);
 
 // Conversion
 s32_4x		WideS32FromF32(f32_4x A);

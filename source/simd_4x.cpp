@@ -401,6 +401,22 @@ GatherS32(void *BasePtr,
 	return (Result);
 }
 
+s32_4x
+GatherU8(void *BasePtr,
+		 u32 Stride, 
+		 s32_4x Indices)
+{
+	s32_4x		Result;
+	u32			*V = (u32 *)&Indices.V;
+
+	Result.V = _mm_setr_epi32(s32(*((u8 *)BasePtr + V[0] * Stride)),
+							  s32(*((u8 *)BasePtr + V[1] * Stride)),
+							  s32(*((u8 *)BasePtr + V[2] * Stride)),
+							  s32(*((u8 *)BasePtr + V[3] * Stride)));
+
+	return (Result);
+}
+
 // Conversion
 s32_4x		
 WideS32FromF32(f32_4x A)
