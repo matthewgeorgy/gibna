@@ -9,10 +9,10 @@
    - Perspective-correct interpolation
    - Depth buffering
    - Clipping
+   - Textures
 
    TODO(matthew):
    - Mesh loading
-   - Textures
 */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -87,6 +87,7 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
+#if 0
 	f32		Vertices[] =
 	{
 		// Position				// Texture coordinates
@@ -100,14 +101,16 @@ main(void)
 		0, 1, 2,
 		0, 2, 3,
 	};
-	/* array<v3>		Vertices; */
-	/* array<u32>		Indices; */
+#else
+	array<v3>		Vertices;
+	array<u32>		Indices;
+
+	GenerateSphere(&Vertices, &Indices);
+#endif
 
 
-	/* GenerateSphere(&Vertices, &Indices); */
-
-	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
-	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
+	buffer VertexBuffer = CreateBuffer(Vertices.Data, Vertices.ByteSize());
+	buffer IndexBuffer = CreateBuffer(Indices.Data, Indices.ByteSize());
 
 	///////////////////////////////////
 	// Texture
@@ -115,7 +118,7 @@ main(void)
 	texture		Texture;
 
 
-	Texture = CreateTexture("assets/danteh.png");
+	Texture = CreateTexture("assets/earth.jpg");
 
 	///////////////////////////////////
 	// Timers
@@ -150,7 +153,7 @@ main(void)
 	State.Bitmap = &Bitmap;
 	State.Texture = Texture;
 
-	Camera.Pos = v3(0, 0, -2);
+	Camera.Pos = v3(0, 0, -4);
 	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
 
@@ -175,9 +178,9 @@ main(void)
 			LARGE_INTEGER Start, End;
 			QueryPerformanceCounter(&Start);
 
-			World = Mat4Identity();
+			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Rotate(-90, v3(1, 0, 0));
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, _countof(Indices));
+			DrawIndexed(&State, Indices.Len());
 
 			PresentBitmap(Bitmap);
 

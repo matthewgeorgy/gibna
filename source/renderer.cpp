@@ -28,13 +28,10 @@ RasterizeTriangle(renderer_state *State,
 	MinY = ((s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT);
 	MaxY = ((s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT) + 1;
 	
-	// TODO(matthew): FIX THIS!!! This can cause us to get negative barycentric.
-	// Instead of rounding down MinX, we should probably round down MaxX based on the
-	// difference between MinX and SIMD_WIDTH.
 	// Align (round DOWN) starting pixel in X to SIMD width to prevent 
 	// overwriting into the next row.
 	// Eg, if MinX = 13 and SIMD_WIDTH=4, then new MinX = 12.
-	/* MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1); */
+	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
 
 	// Screen clipping
 	MinX = Max(MinX, 0);
@@ -190,6 +187,18 @@ SetPixels(renderer_state *State,
 	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(State->Texture.Width));
 	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(State->Texture.Height));
 	wide_s32 TexelIndices = TextureCoordX + TextureCoordY * wide_s32(State->Texture.Width);
+
+	// NOTE(matthew): When going wide, we may have to touch pixels that are
+	// outside of the triangle. These will have _negative_ barycentric coords,
+   	// thus producing invalid (out-of-bounds) texel indices.
+	// To mitigate this, we simply AND the texel indices with our active pixel
+   	// mask. This will leave valid texel indices untouched, while setting the
+	// invalid ones to 0. And since we conditionally overwrite the framebuffer
+	// using the active pixel mask, these "ghost" texels will never be seen :)	
+#if (SIMD_WIDTH != 1)
+	TexelIndices = TexelIndices & ActivePixelMask;
+#endif
+
 	u8 *BaseTexturePtr = &State->Texture.Data[0];
 
 	wide_s32 NewReds   = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndices);
