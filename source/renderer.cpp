@@ -208,11 +208,12 @@ SetPixels(renderer_state *State,
 
 	s32 TextureCoordX = s32(TexCoord.x * State->Texture.Width);
 	s32 TextureCoordY = s32(TexCoord.y * State->Texture.Height);
-	u8 *BaseTexturePtr = &State->Texture.Data[(TextureCoordX + TextureCoordY * State->Texture.Width) * 4];
+	s32 TexelIndex = (TextureCoordX + TextureCoordY * State->Texture.Width);
+	u8 *BaseTexturePtr = &State->Texture.Data[0];
 
-	s32 NewReds   = s32(BaseTexturePtr[0]);
-	s32 NewGreens = s32(BaseTexturePtr[1]);
-	s32 NewBlues  = s32(BaseTexturePtr[2]);
+	s32 NewReds   = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndex);
+	s32 NewGreens = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndex);
+	s32 NewBlues  = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndex);
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * State->Bitmap->Width) * BYTES_PER_PIXEL;
