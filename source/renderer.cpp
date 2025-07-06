@@ -27,11 +27,14 @@ RasterizeTriangle(renderer_state *State,
 	MaxX = ((s32)(Max(Max(V0.x, V1.x), V2.x)) >> FP_SHIFT) + 1;
 	MinY = ((s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT);
 	MaxY = ((s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT) + 1;
-
+	
+	// TODO(matthew): FIX THIS!!! This can cause us to get negative barycentric.
+	// Instead of rounding down MinX, we should probably round down MaxX based on the
+	// difference between MinX and SIMD_WIDTH.
 	// Align (round DOWN) starting pixel in X to SIMD width to prevent 
 	// overwriting into the next row.
 	// Eg, if MinX = 13 and SIMD_WIDTH=4, then new MinX = 12.
-	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
+	/* MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1); */
 
 	// Screen clipping
 	MinX = Max(MinX, 0);
@@ -179,41 +182,19 @@ SetPixels(renderer_state *State,
 		  weights Weights,
 		  color_triple Colors)
 {
-	/* wide_f32 Wide255 = wide_f32(255.0f); */
-
-	/* wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0, */
-	/* 							Colors.C0.g * Weights.W0, */
-	/* 							Colors.C0.b * Weights.W0); */
-	/* wide_v3 NewColor1 = wide_v3(Colors.C1.r * Weights.W1, */
-	/* 							Colors.C1.g * Weights.W1, */
-	/* 							Colors.C1.b * Weights.W1); */
-	/* wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2, */
-	/* 							Colors.C2.g * Weights.W2, */
-	/* 							Colors.C2.b * Weights.W2); */
-
-	/* wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2; */
-
-	/* wide_f32 Reds   = NewColor.r * Wide255; */
-	/* wide_f32 Greens = NewColor.g * Wide255; */
-	/* wide_f32 Blues  = NewColor.b * Wide255; */
-
-	/* wide_s32 NewReds   = WideS32FromF32(Reds); */
-	/* wide_s32 NewGreens = WideS32FromF32(Greens); */
-	/* wide_s32 NewBlues  = WideS32FromF32(Blues); */
-
 	wide_v3 TexCoord0 = wide_v3(Colors.C0.r * Weights.W0, Colors.C0.g * Weights.W0, 0);
 	wide_v3 TexCoord1 = wide_v3(Colors.C1.r * Weights.W1, Colors.C1.g * Weights.W1, 0);
 	wide_v3 TexCoord2 = wide_v3(Colors.C2.r * Weights.W2, Colors.C2.g * Weights.W2, 0);
-	wide_v3 TexCoord = TexCoord0 + TexCoord1 + TexCoord2;
+	wide_v3 TexCoords = TexCoord0 + TexCoord1 + TexCoord2;
 
-	s32 TextureCoordX = s32(TexCoord.x * State->Texture.Width);
-	s32 TextureCoordY = s32(TexCoord.y * State->Texture.Height);
-	s32 TexelIndex = (TextureCoordX + TextureCoordY * State->Texture.Width);
+	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(State->Texture.Width));
+	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(State->Texture.Height));
+	wide_s32 TexelIndices = TextureCoordX + TextureCoordY * wide_s32(State->Texture.Width);
 	u8 *BaseTexturePtr = &State->Texture.Data[0];
 
-	s32 NewReds   = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndex);
-	s32 NewGreens = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndex);
-	s32 NewBlues  = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndex);
+	wide_s32 NewReds   = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndices);
+	wide_s32 NewGreens = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndices);
+	wide_s32 NewBlues  = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndices);
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * State->Bitmap->Width) * BYTES_PER_PIXEL;

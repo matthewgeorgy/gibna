@@ -87,27 +87,27 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-	/* f32		Vertices[] = */
-	/* { */
-	/* 	// Position				// Texture coordinates */
-	/* 	-0.5f, -0.5f, 0.5f,		0.0f, 1.0f, 0.0f, */
-	/* 	-0.5f,  0.5f, 0.5f,		0.0f, 0.0f, 0.0f, */
-	/* 	 0.5f,  0.5f, 0.5f,		1.0f, 0.0f, 0.0f, */
-	/* 	 0.5f, -0.5f, 0.5f,		1.0f, 1.0f, 0.0f, */ 
-	/* }; */
-	/* u32		Indices[] = */
-	/* { */
-	/* 	0, 1, 2, */
-	/* 	0, 2, 3, */
-	/* }; */
-	array<v3>		Vertices;
-	array<u32>		Indices;
+	f32		Vertices[] =
+	{
+		// Position				// Texture coordinates
+		-0.5f, -0.5f, 0.5f,		0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f, 0.5f,		0.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f, 0.5f,		1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f, 0.0f, 
+	};
+	u32		Indices[] =
+	{
+		0, 1, 2,
+		0, 2, 3,
+	};
+	/* array<v3>		Vertices; */
+	/* array<u32>		Indices; */
 
 
-	GenerateSphere(&Vertices, &Indices);
+	/* GenerateSphere(&Vertices, &Indices); */
 
-	buffer VertexBuffer = CreateBuffer(Vertices.Data, Vertices.ByteSize());
-	buffer IndexBuffer = CreateBuffer(Indices.Data, Indices.ByteSize());
+	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
+	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
 
 	///////////////////////////////////
 	// Texture
@@ -115,7 +115,7 @@ main(void)
 	texture		Texture;
 
 
-	Texture = CreateTexture("assets/earth.jpg");
+	Texture = CreateTexture("assets/danteh.png");
 
 	///////////////////////////////////
 	// Timers
@@ -150,7 +150,7 @@ main(void)
 	State.Bitmap = &Bitmap;
 	State.Texture = Texture;
 
-	Camera.Pos = v3(0, 0, -5);
+	Camera.Pos = v3(0, 0, -2);
 	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
 
@@ -175,9 +175,9 @@ main(void)
 			LARGE_INTEGER Start, End;
 			QueryPerformanceCounter(&Start);
 
-			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Rotate(-90, v3(1, 0, 0));
+			World = Mat4Identity();
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, Indices.Len());
+			DrawIndexed(&State, _countof(Indices));
 
 			PresentBitmap(Bitmap);
 
