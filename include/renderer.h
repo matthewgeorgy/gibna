@@ -7,6 +7,7 @@
 #include <bitmap.h>
 #include <fixed_point.h>
 #include <simd.h>
+#include <stb_image.h>
 
 #define SCR_WIDTH 	800
 #define SCR_HEIGHT 	600
@@ -37,10 +38,18 @@ struct buffer
 	void		*Data;
 };
 
+struct texture
+{
+	s32		Width,
+			Height;
+	u8		*Data;
+};
+
 struct renderer_state
 {
 	buffer		VertexBuffer,
 				IndexBuffer;
+	texture		Texture;
 	m4			WVP;
 	bitmap 		*Bitmap;
 };
@@ -71,6 +80,7 @@ v4					PerspectiveDivide(v4 V);
 void				Draw(renderer_state *State, u32 VertexCount);
 void				DrawIndexed(renderer_state *State, u32 IndexCount);
 buffer 				CreateBuffer(void *Data, u32 Size);
+texture				CreateTexture(const char *Filename);
 
 // NOTE(matthew): See the following reference for the clipping implementation
 // https://lisyarus.github.io/blog/posts/implementing-a-tiny-cpu-rasterizer-part-5.html#section-clipping
@@ -79,7 +89,7 @@ vertex 				*ClipTriangle(vertex *Triangle, v4 Equation, vertex *Result);
 vertex 				*ClipTriangle(vertex *Begin, vertex *End);
 
 // NOTE(matthew): SIMD specific code
-void				SetPixels(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
+void				SetPixels(renderer_state *State, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
 void				UpdateDepth(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
 
 #endif // __RENDERER_H__

@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define MG_IMPL
+#define STB_IMAGE_IMPLEMENTATION
 #include <mg.h>
 #include <bitmap.h>
 #include <fixed_point.h>

@@ -89,10 +89,11 @@ main(void)
 
 	f32		Vertices[] =
 	{
-		-0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, 0.5f,		0.0f, 1.0f, 0.0f,
-		 0.5f,  0.5f, 0.5f,		0.0f, 0.0f, 1.0f,
-		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f, 1.0f, 
+		// Position				// Texture coordinates
+		-0.5f, -0.5f, 0.5f,		0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f, 0.5f,		0.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f, 0.5f,		1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f, 0.0f, 
 	};
 	u32		Indices[] =
 	{
@@ -103,6 +104,14 @@ main(void)
 
 	buffer VertexBuffer = CreateBuffer(Vertices, sizeof(Vertices));
 	buffer IndexBuffer = CreateBuffer(Indices, sizeof(Indices));
+
+	///////////////////////////////////
+	// Texture
+
+	texture		Texture;
+
+
+	Texture = CreateTexture("assets/danteh.png");
 
 	///////////////////////////////////
 	// Timers
@@ -135,6 +144,7 @@ main(void)
 	State.VertexBuffer = VertexBuffer;
 	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
+	State.Texture = Texture;
 
 	Camera.Pos = v3(0, 0, -2);
 	Camera.Front = v3(0, 0, 0);

@@ -2,7 +2,7 @@
 #include <renderer.h>
 
 void
-RasterizeTriangle(bitmap *Bitmap,
+RasterizeTriangle(renderer_state *State,
 				  triangle Triangle)
 {
 	s32				MinX, MaxX,
@@ -84,8 +84,8 @@ RasterizeTriangle(bitmap *Bitmap,
 				wide_f32 MaxDepthValue = WideF32FromS32(wide_s32(0x7FFFFFFF));
 				wide_s32 NewDepth = WideS32FromF32((wide_f32(0.5f) + wide_f32(0.5f) * Z) * MaxDepthValue);
 
-				s32 DepthPixelCoord = X + Y * Bitmap->Width;
-				u32 *BaseDepthPtr = &Bitmap->DepthBuffer[DepthPixelCoord];
+				s32 DepthPixelCoord = X + Y * State->Bitmap->Width;
+				u32 *BaseDepthPtr = &State->Bitmap->DepthBuffer[DepthPixelCoord];
 				wide_s32 OldDepth = GatherS32(BaseDepthPtr, sizeof(u32), WIDE_S32_ZERO_TO_RANGE);
 
 				wide_s32 DepthMask = NewDepth < OldDepth;
@@ -93,13 +93,14 @@ RasterizeTriangle(bitmap *Bitmap,
 
 				if (AnyTrue(ActivePixelMask))
 				{
+					// NOTE(matthew): THESE ARE NOW TEXTURE COORDINATES
 					color_triple Colors;
 
 					Colors.C0 = Triangle.V0.Color;
 					Colors.C1 = Triangle.V1.Color;
 					Colors.C2 = Triangle.V2.Color;
 
-					SetPixels(Bitmap, X, Y, ActivePixelMask, Weights, Colors);
+					SetPixels(State, X, Y, ActivePixelMask, Weights, Colors);
 
 					UpdateDepth(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
 				}
@@ -171,38 +172,51 @@ edge::Init(const v2_fp &V0,
 }
 
 void
-SetPixels(bitmap *Bitmap,
+SetPixels(renderer_state *State,
 		  s32 X,
 		  s32 Y,
 		  wide_s32 ActivePixelMask,
 		  weights Weights,
 		  color_triple Colors)
 {
-	wide_f32 Wide255 = wide_f32(255.0f);
+	/* wide_f32 Wide255 = wide_f32(255.0f); */
 
-	wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0,
-								Colors.C0.g * Weights.W0,
-								Colors.C0.b * Weights.W0);
-	wide_v3 NewColor1 = wide_v3(Colors.C1.r * Weights.W1,
-								Colors.C1.g * Weights.W1,
-								Colors.C1.b * Weights.W1);
-	wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2,
-								Colors.C2.g * Weights.W2,
-								Colors.C2.b * Weights.W2);
+	/* wide_v3 NewColor0 = wide_v3(Colors.C0.r * Weights.W0, */
+	/* 							Colors.C0.g * Weights.W0, */
+	/* 							Colors.C0.b * Weights.W0); */
+	/* wide_v3 NewColor1 = wide_v3(Colors.C1.r * Weights.W1, */
+	/* 							Colors.C1.g * Weights.W1, */
+	/* 							Colors.C1.b * Weights.W1); */
+	/* wide_v3 NewColor2 = wide_v3(Colors.C2.r * Weights.W2, */
+	/* 							Colors.C2.g * Weights.W2, */
+	/* 							Colors.C2.b * Weights.W2); */
 
-	wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2;
+	/* wide_v3 NewColor = NewColor0 + NewColor1 + NewColor2; */
 
-	wide_f32 Reds   = NewColor.r * Wide255;
-	wide_f32 Greens = NewColor.g * Wide255;
-	wide_f32 Blues  = NewColor.b * Wide255;
+	/* wide_f32 Reds   = NewColor.r * Wide255; */
+	/* wide_f32 Greens = NewColor.g * Wide255; */
+	/* wide_f32 Blues  = NewColor.b * Wide255; */
 
-	wide_s32 NewReds   = WideS32FromF32(Reds);
-	wide_s32 NewGreens = WideS32FromF32(Greens);
-	wide_s32 NewBlues  = WideS32FromF32(Blues);
+	/* wide_s32 NewReds   = WideS32FromF32(Reds); */
+	/* wide_s32 NewGreens = WideS32FromF32(Greens); */
+	/* wide_s32 NewBlues  = WideS32FromF32(Blues); */
+
+	wide_v3 TexCoord0 = wide_v3(Colors.C0.r * Weights.W0, Colors.C0.g * Weights.W0, 0);
+	wide_v3 TexCoord1 = wide_v3(Colors.C1.r * Weights.W1, Colors.C1.g * Weights.W1, 0);
+	wide_v3 TexCoord2 = wide_v3(Colors.C2.r * Weights.W2, Colors.C2.g * Weights.W2, 0);
+	wide_v3 TexCoord = TexCoord0 + TexCoord1 + TexCoord2;
+
+	s32 TextureCoordX = s32(TexCoord.x * State->Texture.Width);
+	s32 TextureCoordY = s32(TexCoord.y * State->Texture.Height);
+	u8 *BaseTexturePtr = &State->Texture.Data[(TextureCoordX + TextureCoordY * State->Texture.Width) * 4];
+
+	s32 NewReds   = s32(BaseTexturePtr[0]);
+	s32 NewGreens = s32(BaseTexturePtr[1]);
+	s32 NewBlues  = s32(BaseTexturePtr[2]);
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
-	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
-	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
+	s32 PixelCoord = (X + Y * State->Bitmap->Width) * BYTES_PER_PIXEL;
+	u8 *BasePixelPtr = &State->Bitmap->ColorBuffer[PixelCoord];
 
 	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
 	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);
@@ -232,7 +246,7 @@ SetPixels(bitmap *Bitmap,
 
 	for (u32 LaneIdx = 0; LaneIdx < SIMD_WIDTH; LaneIdx += 1)
 	{
-		SetPixel(Bitmap, X + LaneIdx, Y,
+		SetPixel(State->Bitmap, X + LaneIdx, Y,
 			color_u8{u8(R[LaneIdx]), u8(G[LaneIdx]), u8(B[LaneIdx])});
 	}
 }
@@ -305,7 +319,7 @@ Draw(renderer_state *State,
 			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
 			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
 
-			RasterizeTriangle(State->Bitmap, Triangle);
+			RasterizeTriangle(State, Triangle);
 		}
 	}
 }
@@ -358,7 +372,7 @@ DrawIndexed(renderer_state *State,
 			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
 			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
 
-			RasterizeTriangle(State->Bitmap, Triangle);
+			RasterizeTriangle(State, Triangle);
 		}
 	}
 }
@@ -539,5 +553,21 @@ ClipTriangle(vertex *Begin,
 	}
 
 	return End;
+}
+
+texture				
+CreateTexture(const char *Filename)
+{
+	texture		Texture;
+	s32			NumComponents;
+	u8			*PixelData;
+
+	PixelData = stbi_load(Filename, &Texture.Width, &Texture.Height, &NumComponents, 4);
+
+	assert(PixelData != NULL);
+
+	Texture.Data = PixelData;
+
+	return (Texture);
 }
 
