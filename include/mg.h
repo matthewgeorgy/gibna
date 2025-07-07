@@ -804,6 +804,150 @@ MaxV3(const v3 &U,
 #endif // MG_IMPL
 
 ////////////////////////////////////////
+// V3i
+////////////////////////////////////////
+
+union v3i
+{
+	struct { s32 x, y, z; };
+	struct { s32 r, g, b; };
+	struct { s32 u, v, w; };
+	s32 Elements[3];
+
+
+	v3i(void);
+	v3i(s32 x, s32 y, s32 z);
+
+
+	v3i		operator-(void);
+	s32		&operator[](const u32 Component);
+
+	v3i 	&operator+=(const v3i &V);
+	v3i 	&operator-=(const v3i &V);
+};
+
+v3i		operator+(const v3i &U, const v3i &V);
+v3i		operator-(const v3i &U, const v3i &V);
+v3i		operator*(const s32 T, const v3i &U);
+s32		Dot(const v3i &U, const v3i &V);
+v3i 	Hadamard(const v3i &U, const v3i &V);
+
+#ifdef MG_IMPL
+
+v3i::v3i(void)
+{
+	this->x = 0;
+	this->y = 0;
+	this->z = 0;
+}
+
+v3i::v3i(s32 x,
+		 s32 y, 
+		 s32 z)
+{
+	this->x = x;
+	this->y = y;
+	this->z = z;
+}
+
+v3i		
+v3i::operator-(void)
+{
+	this->x *= -1;
+	this->y *= -1;
+	this->z *= -1;
+
+	return (*this);
+}
+
+s32 &
+v3i::operator[](const u32 Component)
+{
+	return (this->Elements[Component]);
+}
+
+v3i &
+v3i::operator+=(const v3i &V)
+{
+	this->x += V.x;
+	this->y += V.y;
+	this->z += V.z;
+
+	return (*this);
+}
+
+v3i &
+v3i::operator-=(const v3i &V)
+{
+	this->x -= V.x;
+	this->y -= V.y;
+	this->z -= V.z;
+
+	return (*this);
+}
+
+v3i		
+operator+(const v3i &U, 
+		  const v3i &V)
+{
+	v3i		Result;
+
+	Result.x = U.x + V.x;
+	Result.y = U.y + V.y;
+	Result.z = U.z + V.z;
+
+	return (Result);
+}
+
+v3i		
+operator-(const v3i &U, 
+		  const v3i &V)
+{
+	v3i		Result;
+
+	Result.x = U.x - V.x;
+	Result.y = U.y - V.y;
+	Result.z = U.z - V.z;
+
+	return (Result);
+}
+
+v3i		
+operator*(const s32 T, 
+		  const v3i &U)
+{
+	v3i		Result;
+
+	Result.x = T * U.x;
+	Result.y = T * U.y;
+	Result.z = T * U.z;
+
+	return (Result);
+}
+
+s32		
+Dot(const v3i &U, 
+	const v3i &V)
+{
+	return (U.x * V.x) + (U.y * V.y) + (U.z * V.z);
+}
+
+v3i 	
+Hadamard(const v3i &U, 
+		 const v3i &V)
+{
+	v3i		Result;
+
+	Result.x = U.x * V.x;
+	Result.y = U.y * V.y;
+	Result.z = U.z * V.z;
+
+	return (Result);
+}
+
+#endif MG_IMPL
+
+////////////////////////////////////////
 // V4
 ////////////////////////////////////////
 

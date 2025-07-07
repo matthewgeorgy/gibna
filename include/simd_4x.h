@@ -111,6 +111,24 @@ union v3_4x
 v3_4x		operator+(v3_4x A, v3_4x B);
 v3_4x		operator-(v3_4x A, v3_4x B);
 
+
+///////////////////////////////////
+// v3i_4x
+///////////////////////////////////
+
+union v3i_4x
+{
+	struct { s32_4x x, y, z; };
+	struct { s32_4x r, g, b; };
+
+
+	v3i_4x();
+	v3i_4x(s32_4x x, s32_4x y, s32_4x z);
+};
+
+v3i_4x		operator+(v3i_4x A, v3i_4x B);
+v3i_4x		operator-(v3i_4x A, v3i_4x B);
+
 ///////////////////////////////////
 // Misc
 ///////////////////////////////////

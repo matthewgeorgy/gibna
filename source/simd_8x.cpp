@@ -423,6 +423,48 @@ operator-(v3_8x A, v3_8x B)
 }
 
 ///////////////////////////////////
+// v3i_8x
+///////////////////////////////////
+
+v3i_8x::v3i_8x()
+{
+}
+
+v3i_8x::v3i_8x(s32_8x x,
+			   s32_8x y,
+			   s32_8x z)
+{
+	this->x = x;
+	this->y = y;
+	this->z = z;
+}
+
+v3i_8x
+operator+(v3i_8x A, v3i_8x B)
+{
+	v3i_8x		Result;
+
+	Result.x = A.x + B.x;
+	Result.y = A.y + B.y;
+	Result.z = A.z + B.z;
+
+	return (Result);
+}
+
+v3i_8x
+operator-(v3i_8x A, v3i_8x B)
+{
+	v3i_8x		Result;
+
+	Result.x = A.x - B.x;
+	Result.y = A.y - B.y;
+	Result.z = A.z - B.z;
+
+	return (Result);
+}
+
+
+///////////////////////////////////
 // Misc
 ///////////////////////////////////
 
