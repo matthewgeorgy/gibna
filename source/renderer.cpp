@@ -181,6 +181,17 @@ edge::Init(const v2_fp &V0,
 	return (InitialEdgeValue);
 }
 
+wide_v3
+PixelShader(renderer_state *State,
+			vertex_attribs Attribs)
+{
+	wide_v3		Output;
+
+	Output = SampleTexture(State->Texture, Attribs.TexCoords);
+
+	return (Output);
+}
+
 void
 SetPixels(renderer_state *State,
 		  s32 X,
@@ -188,8 +199,9 @@ SetPixels(renderer_state *State,
 		  wide_s32 ActivePixelMask,
 		  vertex_attribs Attribs)
 {
-	wide_v3 FloatColors = SampleTexture(State->Texture, Attribs.TexCoords);
-	wide_v3i NewColors = ConvertFloatToIntColors(FloatColors);
+	wide_v3 PSOut = PixelShader(State, Attribs);
+
+	wide_v3i NewColors = ConvertFloatToIntColors(PSOut);
 
 	wide_s32 NewReds   = NewColors.r;
 	wide_s32 NewGreens = NewColors.g;
