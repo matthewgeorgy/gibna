@@ -93,13 +93,6 @@ RasterizeTriangle(renderer_state *State,
 
 				if (AnyTrue(ActivePixelMask))
 				{
-					// NOTE(matthew): THESE ARE NOW TEXTURE COORDINATES
-					color_triple Colors;
-
-					Colors.C0 = Triangle.V0.Color;
-					Colors.C1 = Triangle.V1.Color;
-					Colors.C2 = Triangle.V2.Color;
-
 					// NOTE(matthew): When going wide, we may have to touch pixels that are
 					// outside of the triangle. These will have _negative_ barycentric weights,
 					// thus producing invalid (or even out-of-bounds) vertex attributes.
@@ -195,17 +188,11 @@ SetPixels(renderer_state *State,
 		  wide_s32 ActivePixelMask,
 		  vertex_attribs Attribs)
 {
-	wide_v3 TexCoords = Attribs.Colors;
+	wide_v3i NewColors = SampleTexture(State->Texture, Attribs.TexCoords);
 
-	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(State->Texture.Width));
-	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(State->Texture.Height));
-	wide_s32 TexelIndices = TextureCoordX + TextureCoordY * wide_s32(State->Texture.Width);
-
-	u8 *BaseTexturePtr = &State->Texture.Data[0];
-
-	wide_s32 NewReds   = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndices);
-	wide_s32 NewGreens = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndices);
-	wide_s32 NewBlues  = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndices);
+	wide_s32 NewReds   = NewColors.r;
+	wide_s32 NewGreens = NewColors.g;
+	wide_s32 NewBlues  = NewColors.b;
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * State->Bitmap->Width) * BYTES_PER_PIXEL;
@@ -582,13 +569,32 @@ InterpolateAttributes(triangle *Triangle,
 						V1 = Triangle->V1,
 						V2 = Triangle->V2;
 
-	wide_v3 TexCoord0 = wide_v3(V0.Color.u * Weights.W0, V0.Color.v * Weights.W0, 0);
-	wide_v3 TexCoord1 = wide_v3(V1.Color.u * Weights.W1, V1.Color.v * Weights.W1, 0);
-	wide_v3 TexCoord2 = wide_v3(V2.Color.u * Weights.W2, V2.Color.v * Weights.W2, 0);
-
 	// TODO(matthew): CHANGE THIS TO TEXCOORDS INSTEAD OF COLORS
-	Attributes.Colors = TexCoord0 + TexCoord1 + TexCoord2;
+	wide_v2 TexCoord0 = wide_v2(V0.Color.u * Weights.W0, V0.Color.v * Weights.W0);
+	wide_v2 TexCoord1 = wide_v2(V1.Color.u * Weights.W1, V1.Color.v * Weights.W1);
+	wide_v2 TexCoord2 = wide_v2(V2.Color.u * Weights.W2, V2.Color.v * Weights.W2);
+
+	Attributes.TexCoords = TexCoord0 + TexCoord1 + TexCoord2;
 
 	return (Attributes);
+}
+
+wide_v3i			
+SampleTexture(texture Texture, 
+			  wide_v2 TexCoords)
+{
+	wide_v3i		TextureColors;
+
+	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(Texture.Width));
+	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(Texture.Height));
+	wide_s32 TexelIndices = TextureCoordX + TextureCoordY * wide_s32(Texture.Width);
+
+	u8 *BaseTexturePtr = &Texture.Data[0];
+
+	TextureColors.r = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndices);
+	TextureColors.g = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndices);
+	TextureColors.b = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndices);
+
+	return (TextureColors);
 }
 

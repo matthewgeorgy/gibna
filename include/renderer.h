@@ -21,8 +21,8 @@ struct vertex
 
 struct vertex_attribs
 {
-	wide_v3		Colors;
-	// wide_v2		TexCoords;
+	/* wide_v3		Colors; */
+	wide_v2		TexCoords;
 };
 
 struct triangle
@@ -72,13 +72,6 @@ struct edge
 	wide_s32 Init(const v2_fp &V0, const v2_fp &V1, const v2_fp &P);
 };
 
-struct color_triple
-{
-	v3		C0,
-			C1,
-			C2;
-};
-
 s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);
 b32  				FillRule(v2_fp Edge);
@@ -90,6 +83,7 @@ buffer 				CreateBuffer(void *Data, u32 Size);
 texture				CreateTexture(const char *Filename);
 
 vertex_attribs		InterpolateAttributes(triangle *Triangle, weights Weights);
+wide_v3i			SampleTexture(texture Texture, wide_v2 TexCoords);
 
 // NOTE(matthew): See the following reference for the clipping implementation
 // https://lisyarus.github.io/blog/posts/implementing-a-tiny-cpu-rasterizer-part-5.html#section-clipping
