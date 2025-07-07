@@ -16,7 +16,7 @@ struct vertex
 {
 	v4		Pos;
 	v3		Color;
-	// v2		TexCoord;
+	v2		TexCoord;
 };
 
 struct vertex_attribs
@@ -84,6 +84,9 @@ texture				CreateTexture(const char *Filename);
 
 vertex_attribs		InterpolateAttributes(triangle *Triangle, weights Weights);
 wide_v3i			SampleTexture(texture Texture, wide_v2 TexCoords);
+v2					FetchV2(f32 *Vertices, u32 VertexID);
+v3					FetchV3(f32 *Vertices, u32 VertexID);
+v4					FetchV4(f32 *Vertices, u32 VertexID);
 
 // NOTE(matthew): See the following reference for the clipping implementation
 // https://lisyarus.github.io/blog/posts/implementing-a-tiny-cpu-rasterizer-part-5.html#section-clipping

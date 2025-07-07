@@ -252,70 +252,74 @@ UpdateDepth(u32 *BaseDepthPtr,
 	CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
 }
 
-void
-Draw(renderer_state *State,
-	 u32 VertexCount)
-{
-	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
-	m4 WVP = State->WVP;
-	u32 Stride = 2;
+/* void */
+/* Draw(renderer_state *State, */
+/* 	 u32 VertexCount) */
+/* { */
+/* 	v3 *Vertices = (v3 *)State->VertexBuffer.Data; */
+/* 	m4 WVP = State->WVP; */
+/* 	u32 Stride = 2; */
 
-	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3)
-	{
-		u32 Idx0 = Stride * (BaseID + 0);
-		u32 Idx1 = Stride * (BaseID + 1);
-		u32 Idx2 = Stride * (BaseID + 2);
+/* 	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3) */
+/* 	{ */
+/* 		u32 Idx0 = Stride * (BaseID + 0); */
+/* 		u32 Idx1 = Stride * (BaseID + 1); */
+/* 		u32 Idx2 = Stride * (BaseID + 2); */
 
-		v3 Pos0 = Vertices[Idx0];
-		v3 Pos1 = Vertices[Idx1];
-		v3 Pos2 = Vertices[Idx2];
-		v3 Color0 = Vertices[Idx0 + 1];
-		v3 Color1 = Vertices[Idx1 + 1];
-		v3 Color2 = Vertices[Idx2 + 1];
+/* 		v3 Pos0 = Vertices[Idx0]; */
+/* 		v3 Pos1 = Vertices[Idx1]; */
+/* 		v3 Pos2 = Vertices[Idx2]; */
+/* 		v3 Color0 = Vertices[Idx0 + 1]; */
+/* 		v3 Color1 = Vertices[Idx1 + 1]; */
+/* 		v3 Color2 = Vertices[Idx2 + 1]; */
 
-		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f);
-		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
-		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
+/* 		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f); */
+/* 		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f); */
+/* 		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f); */
 
-		vertex ClippedVertices[12];
+/* 		vertex ClippedVertices[12]; */
 
-		ClippedVertices[0] = { T0, Color0 };
-		ClippedVertices[1] = { T1, Color1 };
-		ClippedVertices[2] = { T2, Color2 };
+/* 		ClippedVertices[0] = { T0, Color0 }; */
+/* 		ClippedVertices[1] = { T1, Color1 }; */
+/* 		ClippedVertices[2] = { T2, Color2 }; */
 
-		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
+/* 		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3); */
 
-		for (vertex *TriangleBegin = ClippedVertices;
-			 TriangleBegin != ClippedVerticesEnd;
-			 TriangleBegin += 3)
-		{
-			vertex V0 = TriangleBegin[0];
-			vertex V1 = TriangleBegin[1];
-			vertex V2 = TriangleBegin[2];
+/* 		for (vertex *TriangleBegin = ClippedVertices; */
+/* 			 TriangleBegin != ClippedVerticesEnd; */
+/* 			 TriangleBegin += 3) */
+/* 		{ */
+/* 			vertex V0 = TriangleBegin[0]; */
+/* 			vertex V1 = TriangleBegin[1]; */
+/* 			vertex V2 = TriangleBegin[2]; */
 
-			triangle Triangle;
+/* 			triangle Triangle; */
 
-			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
-			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
-			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+/* 			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color }; */
+/* 			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color }; */
+/* 			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color }; */
 
-			RasterizeTriangle(State, Triangle);
-		}
-	}
-}
+/* 			RasterizeTriangle(State, Triangle); */
+/* 		} */
+/* 	} */
+/* } */
 
 vertex
 VertexShader(renderer_state *State,
    			 u32 VertexID)
 {
 	vertex		Output;
-	v3			*Vertices = (v3 *)State->VertexBuffer.Data;
+	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
 	m4			WVP = State->WVP;
+	u32			Stride = 5;
+
+	VertexID *= Stride;
 	
-	v3 Pos = Vertices[VertexID];
+	v3 Pos = FetchV3(Vertices, VertexID);
+	v2 TexCoord = FetchV2(Vertices, VertexID + 3);
 
 	Output.Pos = WVP * v4(Pos.x, Pos.y, Pos.z, 1.0f);
-	Output.Color = Vertices[VertexID + 1];
+	Output.TexCoord = TexCoord;
 
 	return (Output);
 }
@@ -324,10 +328,8 @@ void
 DrawIndexed(renderer_state *State,
 			u32 IndexCount)
 {
-	/* v3 *Vertices = (v3 *)State->VertexBuffer.Data; */
 	u32 *Indices = (u32 *)State->IndexBuffer.Data;
-	m4 WVP = State->WVP;
-	u32 Stride = 2;
+	u32 Stride = 1;
 
 	for (u32 BaseID = 0; BaseID < IndexCount; BaseID += 3)
 	{
@@ -355,11 +357,15 @@ DrawIndexed(renderer_state *State,
 			vertex V1 = TriangleBegin[1];
 			vertex V2 = TriangleBegin[2];
 
+			V0.Pos = PerspectiveDivide(V0.Pos);
+			V1.Pos = PerspectiveDivide(V1.Pos);
+			V2.Pos = PerspectiveDivide(V2.Pos);
+
 			triangle Triangle;
 
-			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
-			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
-			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+			Triangle.V0 = V0;
+			Triangle.V1 = V1;
+			Triangle.V2 = V2;
 
 			RasterizeTriangle(State, Triangle);
 		}
@@ -404,6 +410,7 @@ ClipIntersectEdge(vertex V0,
 
 	InterpolatedVertex.Pos = (1.0f - t) * V0.Pos + t * V1.Pos;
 	InterpolatedVertex.Color = (1.0f - t) * V0.Color + t * V1.Color;
+	InterpolatedVertex.TexCoord = (1.0f - t) * V0.TexCoord + t * V1.TexCoord;
 
 	return InterpolatedVertex;
 }
@@ -569,10 +576,9 @@ InterpolateAttributes(triangle *Triangle,
 						V1 = Triangle->V1,
 						V2 = Triangle->V2;
 
-	// TODO(matthew): CHANGE THIS TO TEXCOORDS INSTEAD OF COLORS
-	wide_v2 TexCoord0 = wide_v2(V0.Color.u * Weights.W0, V0.Color.v * Weights.W0);
-	wide_v2 TexCoord1 = wide_v2(V1.Color.u * Weights.W1, V1.Color.v * Weights.W1);
-	wide_v2 TexCoord2 = wide_v2(V2.Color.u * Weights.W2, V2.Color.v * Weights.W2);
+	wide_v2 TexCoord0 = wide_v2(V0.TexCoord.u * Weights.W0, V0.TexCoord.v * Weights.W0);
+	wide_v2 TexCoord1 = wide_v2(V1.TexCoord.u * Weights.W1, V1.TexCoord.v * Weights.W1);
+	wide_v2 TexCoord2 = wide_v2(V2.TexCoord.u * Weights.W2, V2.TexCoord.v * Weights.W2);
 
 	Attributes.TexCoords = TexCoord0 + TexCoord1 + TexCoord2;
 
@@ -596,5 +602,44 @@ SampleTexture(texture Texture,
 	TextureColors.b = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndices);
 
 	return (TextureColors);
+}
+
+v2					
+FetchV2(f32 *Vertices, 
+		u32 VertexID)
+{
+	v2		Result;
+
+	Result = v2(Vertices[VertexID],
+				Vertices[VertexID + 1]);
+
+	return (Result);
+}
+
+v3					
+FetchV3(f32 *Vertices, 
+		u32 VertexID)
+{
+	v3		Result;
+
+	Result = v3(Vertices[VertexID],
+				Vertices[VertexID + 1],
+				Vertices[VertexID + 2]);
+
+	return (Result);
+}
+
+v4					
+FetchV4(f32 *Vertices, 
+		u32 VertexID)
+{
+	v4		Result;
+
+	Result = v4(Vertices[VertexID],
+				Vertices[VertexID + 1],
+				Vertices[VertexID + 2],
+				Vertices[VertexID + 3]);
+
+	return (Result);
 }
 

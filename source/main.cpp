@@ -28,7 +28,7 @@
 #include <mesh.h>
 
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-void				GenerateSphere(array<v3> *Vertices, array<u32> *Indices);
+void				GenerateSphere(array<f32> *Vertices, array<u32> *Indices);
 
 int
 main(void)
@@ -92,10 +92,10 @@ main(void)
 	f32		Vertices[] =
 	{
 		// Position				// Texture coordinates
-		-0.5f, -0.5f, 0.5f,		0.0f, 1.0f, 0.0f,
-		-0.5f,  0.5f, 0.5f,		0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, 0.5f,		1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f, 0.0f, 
+		-0.5f, -0.5f, 0.5f,		0.0f, 1.0f,
+		-0.5f,  0.5f, 0.5f,		0.0f, 0.0f,
+		 0.5f,  0.5f, 0.5f,		1.0f, 0.0f,
+		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f,
 	};
 	u32		Indices[] =
 	{
@@ -103,7 +103,7 @@ main(void)
 		0, 2, 3,
 	};
 #else
-	array<v3>		Vertices;
+	array<f32>		Vertices;
 	array<u32>		Indices;
 
 	GenerateSphere(&Vertices, &Indices);
@@ -248,7 +248,7 @@ WndProc(HWND hWnd,
 }
 
 void				
-GenerateSphere(array<v3> *Vertices,
+GenerateSphere(array<f32> *Vertices,
 			   array<u32> *Indices)
 {
 	s32 SectorCount = 36;
@@ -272,15 +272,20 @@ GenerateSphere(array<v3> *Vertices,
 			f32 Y = XY * Sin(SectorAngle);
 
 			// Vertex
-			Vertices->Push(v3(X, Y, Z));
+			Vertices->Push(X);
+			Vertices->Push(Y);
+			Vertices->Push(Z);
 
 			// Texcoord
 			f32 u = f32(j) / SectorCount;
 			f32 v = f32(i) / StackCount;
-			Vertices->Push(v3(1 - u, v, 0));
+			Vertices->Push(1 - u);
+			Vertices->Push(v);
 
 			// Normal
-			/* Vertices->Push(v3(Abs(X), Abs(Y), Abs(Z))); */
+			/* Vertices->Push(Abs(X)); */
+			/* Vertices->Push(Abs(Y)); */
+			/* Vertices->Push(Abs(Z)); */
 		}
 	}
 
