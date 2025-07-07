@@ -100,6 +100,21 @@ RasterizeTriangle(renderer_state *State,
 					Colors.C1 = Triangle.V1.Color;
 					Colors.C2 = Triangle.V2.Color;
 
+					// NOTE(matthew): When going wide, we may have to touch pixels that are
+					// outside of the triangle. These will have _negative_ barycentric weights,
+					// thus producing invalid (or even out-of-bounds) vertex attributes.
+					// To mitigate this, we simply AND the weights with our active pixel
+					// mask. This will leave valid valid weights untouched, while setting the
+					// invalid ones to 0. And since we conditionally overwrite the framebuffer
+					// using the active pixel mask, these "null" pixels produced by 0 weights
+					// will never be seen :)	
+#if (SIMD_WIDTH != 1)
+					Weights.W0 = ActivePixelMask & Weights.W0;
+					Weights.W1 = ActivePixelMask & Weights.W1;
+					Weights.W2 = ActivePixelMask & Weights.W2;
+#endif
+
+					// TODO(matthew): do a pixel shader, have it return a wide_v3
 					SetPixels(State, X, Y, ActivePixelMask, Weights, Colors);
 
 					UpdateDepth(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
@@ -187,17 +202,6 @@ SetPixels(renderer_state *State,
 	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(State->Texture.Width));
 	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(State->Texture.Height));
 	wide_s32 TexelIndices = TextureCoordX + TextureCoordY * wide_s32(State->Texture.Width);
-
-	// NOTE(matthew): When going wide, we may have to touch pixels that are
-	// outside of the triangle. These will have _negative_ barycentric coords,
-   	// thus producing invalid (out-of-bounds) texel indices.
-	// To mitigate this, we simply AND the texel indices with our active pixel
-   	// mask. This will leave valid texel indices untouched, while setting the
-	// invalid ones to 0. And since we conditionally overwrite the framebuffer
-	// using the active pixel mask, these "ghost" texels will never be seen :)	
-#if (SIMD_WIDTH != 1)
-	TexelIndices = TexelIndices & ActivePixelMask;
-#endif
 
 	u8 *BaseTexturePtr = &State->Texture.Data[0];
 

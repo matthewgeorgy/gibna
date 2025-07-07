@@ -12,7 +12,8 @@
    - Textures
 
    TODO(matthew):
-   - Mesh loading
+   - Improve mesh loading; more types of OBJs (and PLYs too???)
+   - "Shaders" / rendering API
 */
 
 #define _CRT_SECURE_NO_WARNINGS
