@@ -319,6 +319,22 @@ Draw(renderer_state *State,
 	}
 }
 
+vertex
+VertexShader(renderer_state *State,
+   			 u32 VertexID)
+{
+	vertex		Output;
+	v3			*Vertices = (v3 *)State->VertexBuffer.Data;
+	m4			WVP = State->WVP;
+	
+	v3 Pos = Vertices[VertexID];
+
+	Output.Pos = WVP * v4(Pos.x, Pos.y, Pos.z, 1.0f);
+	Output.Color = Vertices[VertexID + 1];
+
+	return (Output);
+}
+
 void
 DrawIndexed(renderer_state *State,
 			u32 IndexCount)
@@ -334,22 +350,15 @@ DrawIndexed(renderer_state *State,
 		u32 Idx1 = Stride * Indices[BaseID + 1];
 		u32 Idx2 = Stride * Indices[BaseID + 2];
 
-		v3 Pos0 = Vertices[Idx0];
-		v3 Pos1 = Vertices[Idx1];
-		v3 Pos2 = Vertices[Idx2];
-		v3 Color0 = Vertices[Idx0 + 1];
-		v3 Color1 = Vertices[Idx1 + 1];
-		v3 Color2 = Vertices[Idx2 + 1];
-
-		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f);
-		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
-		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
+		vertex T0 = VertexShader(State, Idx0);
+		vertex T1 = VertexShader(State, Idx1);
+		vertex T2 = VertexShader(State, Idx2);
 
 		vertex ClippedVertices[12];
 
-		ClippedVertices[0] = { T0, Color0 };
-		ClippedVertices[1] = { T1, Color1 };
-		ClippedVertices[2] = { T2, Color2 };
+		ClippedVertices[0] = T0;
+		ClippedVertices[1] = T1;
+		ClippedVertices[2] = T2;
 
 		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
 
