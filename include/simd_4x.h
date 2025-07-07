@@ -73,6 +73,10 @@ f32_4x		operator*(f32_4x A, f32_4x B);
 f32_4x		operator*(f32 A, f32_4x B);
 f32_4x		operator/(f32_4x A, f32_4x B);
 
+// Bitwise
+f32_4x		operator&(s32_4x Mask, f32_4x B);
+f32_4x		operator|(s32_4x Mask, f32_4x B);
+
 ///////////////////////////////////
 // v3_4x
 ///////////////////////////////////

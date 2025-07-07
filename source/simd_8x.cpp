@@ -321,6 +321,29 @@ operator/(f32_8x A,
 	return (Result);
 }
 
+// Bitwise
+f32_8x		
+operator&(s32_8x Mask,
+		  f32_8x B)
+{
+	f32_8x		Result;
+
+	Result.V = _mm256_and_ps(_mm256_castsi256_ps(Mask.V), B.V);	
+
+	return (Result);
+}
+
+f32_8x		
+operator|(s32_8x Mask, 
+		  f32_8x B)
+{
+	f32_8x		Result;
+
+	Result.V = _mm256_or_ps(_mm256_castsi256_ps(Mask.V), B.V);	
+
+	return (Result);
+}
+
 ///////////////////////////////////
 // v3_8x
 ///////////////////////////////////

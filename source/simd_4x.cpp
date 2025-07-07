@@ -329,6 +329,29 @@ operator/(f32_4x A,
 	return (Result);
 }
 
+// Bitwise
+f32_4x		
+operator&(s32_4x Mask, 
+		  f32_4x B)
+{
+	f32_4x		Result;
+
+	Result.V = _mm_and_ps(_mm_castsi128_ps(Mask.V), B.V);
+
+	return (Result);
+}
+
+f32_4x		
+operator|(s32_4x Mask, 
+		  f32_4x B)
+{
+	f32_4x		Result;
+
+	Result.V = _mm_or_ps(_mm_castsi128_ps(Mask.V), B.V);
+
+	return (Result);
+}
+
 ///////////////////////////////////
 // v3_4x
 ///////////////////////////////////

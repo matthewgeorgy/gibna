@@ -73,6 +73,11 @@ f32_8x		operator*(f32_8x A, f32_8x B);
 f32_8x		operator*(f32 A, f32_8x B);
 f32_8x		operator/(f32_8x A, f32_8x B);
 
+// Bitwise
+f32_8x		operator&(s32_8x Mask, f32_8x B);
+f32_8x		operator|(s32_8x Mask, f32_8x B);
+
+
 ///////////////////////////////////
 // v3_8x
 ///////////////////////////////////
