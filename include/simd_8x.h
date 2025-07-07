@@ -77,6 +77,22 @@ f32_8x		operator/(f32_8x A, f32_8x B);
 f32_8x		operator&(s32_8x Mask, f32_8x B);
 f32_8x		operator|(s32_8x Mask, f32_8x B);
 
+///////////////////////////////////
+// v2_8x
+///////////////////////////////////
+
+union v2_8x
+{
+	struct { f32_8x x, y; };
+	struct { f32_8x r, g; };
+
+
+	v2_8x();
+	v2_8x(f32_8x x, f32_8x y);
+};
+
+v2_8x		operator+(v2_8x A, v2_8x B);
+v2_8x		operator-(v2_8x A, v2_8x B);
 
 ///////////////////////////////////
 // v3_8x

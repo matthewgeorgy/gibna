@@ -30,6 +30,7 @@ struct weights_8x
 
 typedef s32			wide_s32;
 typedef f32			wide_f32;
+typedef v2			wide_v2;
 typedef v3			wide_v3;
 typedef weights_1x	weights;
 
@@ -39,6 +40,7 @@ typedef weights_1x	weights;
 
 typedef s32_4x		wide_s32;
 typedef f32_4x		wide_f32;
+typedef v2_4x		wide_v2;
 typedef v3_4x		wide_v3;
 typedef weights_4x	weights;
 
@@ -48,6 +50,7 @@ typedef weights_4x	weights;
 
 typedef s32_8x		wide_s32;
 typedef f32_8x		wide_f32;
+typedef v2_8x		wide_v2;
 typedef v3_8x		wide_v3;
 typedef weights_8x	weights;
 

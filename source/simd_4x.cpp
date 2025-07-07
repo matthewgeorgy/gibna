@@ -353,6 +353,45 @@ operator|(s32_4x Mask,
 }
 
 ///////////////////////////////////
+// v2_4x
+///////////////////////////////////
+
+v2_4x::v2_4x()
+{
+}
+
+v2_4x::v2_4x(f32_4x x, 
+			 f32_4x y)
+{
+	this->x = x;
+	this->y = y;
+}
+
+v2_4x		
+operator+(v2_4x A, 
+		  v2_4x B)
+{
+	v2_4x		Result;
+
+	Result.x = A.x + B.x;
+	Result.y = A.y + B.y;
+
+	return (Result);
+}
+
+v2_4x		
+operator-(v2_4x A, 
+		  v2_4x B)
+{
+	v2_4x		Result;
+
+	Result.x = A.x - B.x;
+	Result.y = A.y - B.y;
+
+	return (Result);
+}
+
+///////////////////////////////////
 // v3_4x
 ///////////////////////////////////
 

@@ -345,6 +345,43 @@ operator|(s32_8x Mask,
 }
 
 ///////////////////////////////////
+// v2_8x
+///////////////////////////////////
+
+v2_8x::v2_8x()
+{
+}
+
+v2_8x::v2_8x(f32_8x x,
+			 f32_8x y)
+{
+	this->x = x;
+	this->y = y;
+}
+
+v2_8x
+operator+(v2_8x A, v2_8x B)
+{
+	v2_8x		Result;
+
+	Result.x = A.x + B.x;
+	Result.y = A.y + B.y;
+
+	return (Result);
+}
+
+v2_8x
+operator-(v2_8x A, v2_8x B)
+{
+	v2_8x		Result;
+
+	Result.x = A.x - B.x;
+	Result.y = A.y - B.y;
+
+	return (Result);
+}
+
+///////////////////////////////////
 // v3_8x
 ///////////////////////////////////
 
