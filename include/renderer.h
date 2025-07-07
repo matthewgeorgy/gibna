@@ -16,6 +16,13 @@ struct vertex
 {
 	v4		Pos;
 	v3		Color;
+	// v2		TexCoord;
+};
+
+struct vertex_attribs
+{
+	wide_v3		Colors;
+	// wide_v2		TexCoords;
 };
 
 struct triangle
@@ -82,6 +89,8 @@ void				DrawIndexed(renderer_state *State, u32 IndexCount);
 buffer 				CreateBuffer(void *Data, u32 Size);
 texture				CreateTexture(const char *Filename);
 
+vertex_attribs		InterpolateAttributes(triangle *Triangle, weights Weights);
+
 // NOTE(matthew): See the following reference for the clipping implementation
 // https://lisyarus.github.io/blog/posts/implementing-a-tiny-cpu-rasterizer-part-5.html#section-clipping
 vertex				ClipIntersectEdge(vertex V0, vertex V1, f32 Value0, f32 Value1);
@@ -89,7 +98,7 @@ vertex 				*ClipTriangle(vertex *Triangle, v4 Equation, vertex *Result);
 vertex 				*ClipTriangle(vertex *Begin, vertex *End);
 
 // NOTE(matthew): SIMD specific code
-void				SetPixels(renderer_state *State, s32 X, s32 Y, wide_s32 ActivePixelMask, weights Weights, color_triple Colors);
+void				SetPixels(renderer_state *State, s32 X, s32 Y, wide_s32 ActivePixelMask, vertex_attribs Attribs);
 void				UpdateDepth(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
 
 #endif // __RENDERER_H__

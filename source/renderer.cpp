@@ -114,8 +114,10 @@ RasterizeTriangle(renderer_state *State,
 					Weights.W2 = ActivePixelMask & Weights.W2;
 #endif
 
+					vertex_attribs Attribs = InterpolateAttributes(&Triangle, Weights);
+
 					// TODO(matthew): do a pixel shader, have it return a wide_v3
-					SetPixels(State, X, Y, ActivePixelMask, Weights, Colors);
+					SetPixels(State, X, Y, ActivePixelMask, Attribs);
 
 					UpdateDepth(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
 				}
@@ -191,13 +193,9 @@ SetPixels(renderer_state *State,
 		  s32 X,
 		  s32 Y,
 		  wide_s32 ActivePixelMask,
-		  weights Weights,
-		  color_triple Colors)
+		  vertex_attribs Attribs)
 {
-	wide_v3 TexCoord0 = wide_v3(Colors.C0.r * Weights.W0, Colors.C0.g * Weights.W0, 0);
-	wide_v3 TexCoord1 = wide_v3(Colors.C1.r * Weights.W1, Colors.C1.g * Weights.W1, 0);
-	wide_v3 TexCoord2 = wide_v3(Colors.C2.r * Weights.W2, Colors.C2.g * Weights.W2, 0);
-	wide_v3 TexCoords = TexCoord0 + TexCoord1 + TexCoord2;
+	wide_v3 TexCoords = Attribs.Colors;
 
 	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(State->Texture.Width));
 	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(State->Texture.Height));
@@ -339,7 +337,7 @@ void
 DrawIndexed(renderer_state *State,
 			u32 IndexCount)
 {
-	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
+	/* v3 *Vertices = (v3 *)State->VertexBuffer.Data; */
 	u32 *Indices = (u32 *)State->IndexBuffer.Data;
 	m4 WVP = State->WVP;
 	u32 Stride = 2;
@@ -573,5 +571,24 @@ CreateTexture(const char *Filename)
 	Texture.Data = PixelData;
 
 	return (Texture);
+}
+
+vertex_attribs		
+InterpolateAttributes(triangle *Triangle,
+					  weights Weights)
+{
+	vertex_attribs		Attributes;
+	vertex				V0 = Triangle->V0,
+						V1 = Triangle->V1,
+						V2 = Triangle->V2;
+
+	wide_v3 TexCoord0 = wide_v3(V0.Color.u * Weights.W0, V0.Color.v * Weights.W0, 0);
+	wide_v3 TexCoord1 = wide_v3(V1.Color.u * Weights.W1, V1.Color.v * Weights.W1, 0);
+	wide_v3 TexCoord2 = wide_v3(V2.Color.u * Weights.W2, V2.Color.v * Weights.W2, 0);
+
+	// TODO(matthew): CHANGE THIS TO TEXCOORDS INSTEAD OF COLORS
+	Attributes.Colors = TexCoord0 + TexCoord1 + TexCoord2;
+
+	return (Attributes);
 }
 
