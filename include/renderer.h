@@ -21,7 +21,7 @@ struct vertex
 
 struct vertex_attribs
 {
-	/* wide_v3		Colors; */
+	wide_v3		Colors;
 	wide_v2		TexCoords;
 };
 

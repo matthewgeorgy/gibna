@@ -576,6 +576,18 @@ InterpolateAttributes(triangle *Triangle,
 						V1 = Triangle->V1,
 						V2 = Triangle->V2;
 
+	wide_v3 NewColor0 = wide_v3(V0.Color.r * Weights.W0,
+								V0.Color.g * Weights.W0,
+								V0.Color.b * Weights.W0);
+	wide_v3 NewColor1 = wide_v3(V1.Color.r * Weights.W1,
+								V1.Color.g * Weights.W1,
+								V1.Color.b * Weights.W1);
+	wide_v3 NewColor2 = wide_v3(V2.Color.r * Weights.W2,
+								V2.Color.g * Weights.W2,
+								V2.Color.b * Weights.W2);
+
+	Attributes.Colors = NewColor0 + NewColor1 + NewColor2;
+
 	wide_v2 TexCoord0 = wide_v2(V0.TexCoord.u * Weights.W0, V0.TexCoord.v * Weights.W0);
 	wide_v2 TexCoord1 = wide_v2(V1.TexCoord.u * Weights.W1, V1.TexCoord.v * Weights.W1);
 	wide_v2 TexCoord2 = wide_v2(V2.TexCoord.u * Weights.W2, V2.TexCoord.v * Weights.W2);
