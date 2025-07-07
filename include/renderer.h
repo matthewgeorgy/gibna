@@ -83,10 +83,13 @@ buffer 				CreateBuffer(void *Data, u32 Size);
 texture				CreateTexture(const char *Filename);
 
 vertex_attribs		InterpolateAttributes(triangle *Triangle, weights Weights);
-wide_v3i			SampleTexture(texture Texture, wide_v2 TexCoords);
+wide_v3				SampleTexture(texture Texture, wide_v2 TexCoords);
 v2					FetchV2(f32 *Vertices, u32 VertexID);
 v3					FetchV3(f32 *Vertices, u32 VertexID);
 v4					FetchV4(f32 *Vertices, u32 VertexID);
+
+wide_v3				ConvertIntToFloatColors(wide_v3i IntColors);
+wide_v3i			ConvertFloatToIntColors(wide_v3 FloatColors);
 
 // NOTE(matthew): See the following reference for the clipping implementation
 // https://lisyarus.github.io/blog/posts/implementing-a-tiny-cpu-rasterizer-part-5.html#section-clipping

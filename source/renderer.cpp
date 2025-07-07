@@ -188,7 +188,8 @@ SetPixels(renderer_state *State,
 		  wide_s32 ActivePixelMask,
 		  vertex_attribs Attribs)
 {
-	wide_v3i NewColors = SampleTexture(State->Texture, Attribs.TexCoords);
+	wide_v3 FloatColors = SampleTexture(State->Texture, Attribs.TexCoords);
+	wide_v3i NewColors = ConvertFloatToIntColors(FloatColors);
 
 	wide_s32 NewReds   = NewColors.r;
 	wide_s32 NewGreens = NewColors.g;
@@ -597,11 +598,11 @@ InterpolateAttributes(triangle *Triangle,
 	return (Attributes);
 }
 
-wide_v3i			
+wide_v3		
 SampleTexture(texture Texture, 
 			  wide_v2 TexCoords)
 {
-	wide_v3i		TextureColors;
+	wide_v3i		IntColors;
 
 	wide_s32 TextureCoordX = WideS32FromF32(TexCoords.x * WideF32FromS32(Texture.Width));
 	wide_s32 TextureCoordY = WideS32FromF32(TexCoords.y * WideF32FromS32(Texture.Height));
@@ -609,11 +610,39 @@ SampleTexture(texture Texture,
 
 	u8 *BaseTexturePtr = &Texture.Data[0];
 
-	TextureColors.r = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndices);
-	TextureColors.g = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndices);
-	TextureColors.b = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndices);
+	IntColors.r = GatherU8(BaseTexturePtr + 0, BYTES_PER_PIXEL, TexelIndices);
+	IntColors.g = GatherU8(BaseTexturePtr + 1, BYTES_PER_PIXEL, TexelIndices);
+	IntColors.b = GatherU8(BaseTexturePtr + 2, BYTES_PER_PIXEL, TexelIndices);
+
+	wide_v3 TextureColors = ConvertIntToFloatColors(IntColors);
 
 	return (TextureColors);
+}
+
+wide_v3i
+ConvertFloatToIntColors(wide_v3 FloatColors)
+{
+	wide_v3i		IntColors;
+	wide_f32		Wide255 = wide_f32(255.0f);
+
+	IntColors.r = WideS32FromF32(FloatColors.r * Wide255);
+	IntColors.g = WideS32FromF32(FloatColors.g * Wide255);
+	IntColors.b = WideS32FromF32(FloatColors.b * Wide255);
+
+	return (IntColors);
+}
+
+wide_v3
+ConvertIntToFloatColors(wide_v3i IntColors)
+{
+	wide_v3			FloatColors;
+	wide_f32		WideInv255 = wide_f32(1.0f / 255.0f);
+
+	FloatColors.r = WideF32FromS32(IntColors.r) * WideInv255;
+	FloatColors.g = WideF32FromS32(IntColors.g) * WideInv255;
+	FloatColors.b = WideF32FromS32(IntColors.b) * WideInv255;
+
+	return (FloatColors);
 }
 
 v2					
