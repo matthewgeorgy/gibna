@@ -317,7 +317,13 @@ Draw(renderer_state *State,
 			Triangle.V1 = V1;
 			Triangle.V2 = V2;
 
-			RasterizeTriangle(State, Triangle);
+			v4 A = V1.Pos - V0.Pos;
+			v4 B = V2.Pos - V0.Pos;
+
+			if (((A.x * B.y) - (A.y * B.x)) < 0)
+			{
+				RasterizeTriangle(State, Triangle);
+			}
 		}
 	}
 }
@@ -360,7 +366,13 @@ DrawIndexed(renderer_state *State,
 			Triangle.V1 = V1;
 			Triangle.V2 = V2;
 
-			RasterizeTriangle(State, Triangle);
+			v4 A = V1.Pos - V0.Pos;
+			v4 B = V2.Pos - V0.Pos;
+
+			if (((A.x * B.y) - (A.y * B.x)) < 0)
+			{
+				RasterizeTriangle(State, Triangle);
+			}
 		}
 	}
 }
