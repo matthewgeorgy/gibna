@@ -105,9 +105,13 @@ vertex				ClipIntersectEdge(vertex V0, vertex V1, f32 Value0, f32 Value1);
 vertex 				*ClipTriangle(vertex *Triangle, v4 Equation, vertex *Result);
 vertex 				*ClipTriangle(vertex *Begin, vertex *End);
 
-// NOTE(matthew): SIMD specific code
-void				SetPixels(renderer_state *State, s32 X, s32 Y, wide_s32 ActivePixelMask, wide_v3 PSOut);
-void				UpdateDepth(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
+// NOTE(matthew): scalar versions
+void				RenderPixel(bitmap *Bitmap, s32 X, s32 Y, v3 PSOut);
+void				UpdateDepth(u32 *BaseDepthPtr, s32 NewDepth);
+
+// NOTE(matthew): SIMD versions
+void				RenderPixels(bitmap *Bitmap, s32 X, s32 Y, wide_s32 ActivePixelMask, wide_v3 PSOut);
+void				UpdateDepths(u32 *BaseDepthPtr, wide_s32 ActivePixelMask, wide_s32 OldDepth, wide_s32 NewDepth);
 
 #endif // __RENDERER_H__
 

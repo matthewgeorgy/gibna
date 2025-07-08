@@ -111,10 +111,13 @@ RasterizeTriangle(renderer_state *State,
 
 					wide_v3 PSOut = State->PS(State, Attribs);
 
-					// TODO(matthew): do a pixel shader, have it return a wide_v3
-					SetPixels(State, X, Y, ActivePixelMask, PSOut);
-
-					UpdateDepth(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
+#if (SIMD_WIDTH==1)
+					RenderPixel(State->Bitmap, X, Y, PSOut);
+					UpdateDepth(BaseDepthPtr, NewDepth);
+#else
+					RenderPixels(State->Bitmap, X, Y, ActivePixelMask, PSOut);
+					UpdateDepths(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
+#endif
 				}
 			}
 
@@ -183,12 +186,40 @@ edge::Init(const v2_fp &V0,
 	return (InitialEdgeValue);
 }
 
+#if (SIMD_WIDTH==1)
+
+void				
+RenderPixel(bitmap *Bitmap, 
+			s32 X, 
+			s32 Y, 
+			v3 PSOut)
+{
+	v3i			NewColor = ConvertFloatToIntColors(PSOut);
+	color_u8	Color =
+	{
+		u8(NewColor.r),
+		u8(NewColor.g),
+		u8(NewColor.b),
+	};
+
+	SetPixel(Bitmap, X, Y, Color);
+}
+
+void				
+UpdateDepth(u32 *BaseDepthPtr,
+			s32 NewDepth)
+{
+	*BaseDepthPtr = NewDepth;
+}
+
+#else
+
 void
-SetPixels(renderer_state *State,
-		  s32 X,
-		  s32 Y,
-		  wide_s32 ActivePixelMask,
-		  wide_v3 PSOut)
+RenderPixels(bitmap *Bitmap,
+		     s32 X,
+		     s32 Y,
+		     wide_s32 ActivePixelMask,
+		     wide_v3 PSOut)
 {
 	wide_v3i NewColors = ConvertFloatToIntColors(PSOut);
 
@@ -196,10 +227,9 @@ SetPixels(renderer_state *State,
 	wide_s32 NewGreens = NewColors.g;
 	wide_s32 NewBlues  = NewColors.b;
 
-	// TODO(matthew): Make the scalar version skip all this stuff
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
-	s32 PixelCoord = (X + Y * State->Bitmap->Width) * BYTES_PER_PIXEL;
-	u8 *BasePixelPtr = &State->Bitmap->ColorBuffer[PixelCoord];
+	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
 
 	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
 	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);
@@ -213,11 +243,7 @@ SetPixels(renderer_state *State,
 	alignas(4 * SIMD_WIDTH) static s32 G[SIMD_WIDTH];
 	alignas(4 * SIMD_WIDTH) static s32 B[SIMD_WIDTH];
 
-#if (SIMD_WIDTH==1)
-	R[0] = NewReds;
-	G[0] = NewGreens;
-	B[0] = NewBlues;
-#elif (SIMD_WIDTH==4)
+#if (SIMD_WIDTH==4)
 	_mm_store_si128((__m128i *)&R[0], NewReds.V);
 	_mm_store_si128((__m128i *)&G[0], NewGreens.V);
 	_mm_store_si128((__m128i *)&B[0], NewBlues.V);
@@ -229,24 +255,22 @@ SetPixels(renderer_state *State,
 
 	for (u32 LaneIdx = 0; LaneIdx < SIMD_WIDTH; LaneIdx += 1)
 	{
-		SetPixel(State->Bitmap, X + LaneIdx, Y,
+		SetPixel(Bitmap, X + LaneIdx, Y,
 			color_u8{u8(R[LaneIdx]), u8(G[LaneIdx]), u8(B[LaneIdx])});
 	}
 }
 
 void
-UpdateDepth(u32 *BaseDepthPtr,
-		    wide_s32 ActivePixelMask,
-		    wide_s32 OldDepth,
-		    wide_s32 NewDepth)
+UpdateDepths(u32 *BaseDepthPtr,
+		     wide_s32 ActivePixelMask,
+		     wide_s32 OldDepth,
+		     wide_s32 NewDepth)
 {
 	alignas(SIMD_WIDTH * 4) static u32 Depth[SIMD_WIDTH];
 
 	ConditionalAssign(&NewDepth, ActivePixelMask, OldDepth);
 
-#if (SIMD_WIDTH==1)
-	Depth[0] = NewDepth;
-#elif (SIMD_WIDTH==4)
+#if (SIMD_WIDTH==4)
 	_mm_store_si128((__m128i *)&Depth[0], NewDepth.V);
 #elif (SIMD_WIDTH==8)
 	_mm256_store_si256((__m256i *)&Depth[0], NewDepth.V);
@@ -255,57 +279,61 @@ UpdateDepth(u32 *BaseDepthPtr,
 	CopyMemory(BaseDepthPtr, Depth, sizeof(Depth));
 }
 
-/* void */
-/* Draw(renderer_state *State, */
-/* 	 u32 VertexCount) */
-/* { */
-/* 	v3 *Vertices = (v3 *)State->VertexBuffer.Data; */
-/* 	m4 WVP = State->WVP; */
-/* 	u32 Stride = 2; */
+#endif // SIMD_WIDTH
 
-/* 	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3) */
-/* 	{ */
-/* 		u32 Idx0 = Stride * (BaseID + 0); */
-/* 		u32 Idx1 = Stride * (BaseID + 1); */
-/* 		u32 Idx2 = Stride * (BaseID + 2); */
+#if 0
+void
+Draw(renderer_state *State,
+	 u32 VertexCount)
+{
+	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
+	m4 WVP = State->WVP;
+	u32 Stride = 2;
 
-/* 		v3 Pos0 = Vertices[Idx0]; */
-/* 		v3 Pos1 = Vertices[Idx1]; */
-/* 		v3 Pos2 = Vertices[Idx2]; */
-/* 		v3 Color0 = Vertices[Idx0 + 1]; */
-/* 		v3 Color1 = Vertices[Idx1 + 1]; */
-/* 		v3 Color2 = Vertices[Idx2 + 1]; */
+	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3)
+	{
+		u32 Idx0 = Stride * (BaseID + 0);
+		u32 Idx1 = Stride * (BaseID + 1);
+		u32 Idx2 = Stride * (BaseID + 2);
 
-/* 		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f); */
-/* 		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f); */
-/* 		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f); */
+		v3 Pos0 = Vertices[Idx0];
+		v3 Pos1 = Vertices[Idx1];
+		v3 Pos2 = Vertices[Idx2];
+		v3 Color0 = Vertices[Idx0 + 1];
+		v3 Color1 = Vertices[Idx1 + 1];
+		v3 Color2 = Vertices[Idx2 + 1];
 
-/* 		vertex ClippedVertices[12]; */
+		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f);
+		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
+		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
 
-/* 		ClippedVertices[0] = { T0, Color0 }; */
-/* 		ClippedVertices[1] = { T1, Color1 }; */
-/* 		ClippedVertices[2] = { T2, Color2 }; */
+		vertex ClippedVertices[12];
 
-/* 		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3); */
+		ClippedVertices[0] = { T0, Color0 };
+		ClippedVertices[1] = { T1, Color1 };
+		ClippedVertices[2] = { T2, Color2 };
 
-/* 		for (vertex *TriangleBegin = ClippedVertices; */
-/* 			 TriangleBegin != ClippedVerticesEnd; */
-/* 			 TriangleBegin += 3) */
-/* 		{ */
-/* 			vertex V0 = TriangleBegin[0]; */
-/* 			vertex V1 = TriangleBegin[1]; */
-/* 			vertex V2 = TriangleBegin[2]; */
+		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
 
-/* 			triangle Triangle; */
+		for (vertex *TriangleBegin = ClippedVertices;
+			 TriangleBegin != ClippedVerticesEnd;
+			 TriangleBegin += 3)
+		{
+			vertex V0 = TriangleBegin[0];
+			vertex V1 = TriangleBegin[1];
+			vertex V2 = TriangleBegin[2];
 
-/* 			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color }; */
-/* 			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color }; */
-/* 			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color }; */
+			triangle Triangle;
 
-/* 			RasterizeTriangle(State, Triangle); */
-/* 		} */
-/* 	} */
-/* } */
+			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
+			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
+			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+
+			RasterizeTriangle(State, Triangle);
+		}
+	}
+}
+#endif
 
 void
 DrawIndexed(renderer_state *State,
