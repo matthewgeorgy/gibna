@@ -109,8 +109,10 @@ RasterizeTriangle(renderer_state *State,
 
 					vertex_attribs Attribs = InterpolateAttributes(&Triangle, Weights);
 
+					wide_v3 PSOut = State->PS(State, Attribs);
+
 					// TODO(matthew): do a pixel shader, have it return a wide_v3
-					SetPixels(State, X, Y, ActivePixelMask, Attribs);
+					SetPixels(State, X, Y, ActivePixelMask, PSOut);
 
 					UpdateDepth(BaseDepthPtr, ActivePixelMask, OldDepth, NewDepth);
 				}
@@ -186,10 +188,8 @@ SetPixels(renderer_state *State,
 		  s32 X,
 		  s32 Y,
 		  wide_s32 ActivePixelMask,
-		  vertex_attribs Attribs)
+		  wide_v3 PSOut)
 {
-	wide_v3 PSOut = State->PS(State, Attribs);
-
 	wide_v3i NewColors = ConvertFloatToIntColors(PSOut);
 
 	wide_s32 NewReds   = NewColors.r;
