@@ -52,6 +52,11 @@ struct texture
 	u8		*Data;
 };
 
+struct renderer_state;
+
+typedef vertex (*vs_proc)(renderer_state *, u32);
+typedef wide_v3 (*ps_proc)(renderer_state *, vertex_attribs);
+
 struct renderer_state
 {
 	buffer		VertexBuffer,
@@ -59,6 +64,8 @@ struct renderer_state
 	texture		Texture;
 	m4			WVP;
 	bitmap 		*Bitmap;
+	vs_proc		VS;
+	ps_proc		PS;
 };
 
 struct edge
@@ -71,6 +78,7 @@ struct edge
 
 	wide_s32 Init(const v2_fp &V0, const v2_fp &V1, const v2_fp &P);
 };
+
 
 s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
 v2					NdcToRaster(v2 Point);

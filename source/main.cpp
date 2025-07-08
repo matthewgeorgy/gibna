@@ -30,6 +30,9 @@
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 void				GenerateSphere(array<f32> *Vertices, array<u32> *Indices);
 
+vertex				VertexShader(renderer_state *State, u32 VertexID);
+wide_v3				PixelShader(renderer_state *State, vertex_attribs Attribs);
+
 int
 main(void)
 {
@@ -153,6 +156,8 @@ main(void)
 	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
 	State.Texture = Texture;
+	State.VS = &VertexShader;
+	State.PS = &PixelShader;
 
 	Camera.Pos = v3(0, 0, -4);
 	Camera.Front = v3(0, 0, 0);
@@ -311,4 +316,36 @@ GenerateSphere(array<f32> *Vertices,
 		}
 	}
 }
+
+wide_v3
+PixelShader(renderer_state *State,
+			vertex_attribs Attribs)
+{
+	wide_v3		Output;
+
+	Output = SampleTexture(State->Texture, Attribs.TexCoords);
+
+	return (Output);
+}
+
+vertex
+VertexShader(renderer_state *State,
+			 u32 VertexID)
+{
+	vertex		Output;
+	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
+	m4			WVP = State->WVP;
+	u32			Stride = 5;
+
+	VertexID *= Stride;
+	
+	v3 Pos = FetchV3(Vertices, VertexID);
+	v2 TexCoord = FetchV2(Vertices, VertexID + 3);
+
+	Output.Pos = WVP * v4(Pos.x, Pos.y, Pos.z, 1.0f);
+	Output.TexCoord = TexCoord;
+
+	return (Output);
+}
+
 

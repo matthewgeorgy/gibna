@@ -181,17 +181,6 @@ edge::Init(const v2_fp &V0,
 	return (InitialEdgeValue);
 }
 
-wide_v3
-PixelShader(renderer_state *State,
-			vertex_attribs Attribs)
-{
-	wide_v3		Output;
-
-	Output = SampleTexture(State->Texture, Attribs.TexCoords);
-
-	return (Output);
-}
-
 void
 SetPixels(renderer_state *State,
 		  s32 X,
@@ -199,7 +188,7 @@ SetPixels(renderer_state *State,
 		  wide_s32 ActivePixelMask,
 		  vertex_attribs Attribs)
 {
-	wide_v3 PSOut = PixelShader(State, Attribs);
+	wide_v3 PSOut = State->PS(State, Attribs);
 
 	wide_v3i NewColors = ConvertFloatToIntColors(PSOut);
 
@@ -207,6 +196,7 @@ SetPixels(renderer_state *State,
 	wide_s32 NewGreens = NewColors.g;
 	wide_s32 NewBlues  = NewColors.b;
 
+	// TODO(matthew): Make the scalar version skip all this stuff
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * State->Bitmap->Width) * BYTES_PER_PIXEL;
 	u8 *BasePixelPtr = &State->Bitmap->ColorBuffer[PixelCoord];
@@ -317,26 +307,6 @@ UpdateDepth(u32 *BaseDepthPtr,
 /* 	} */
 /* } */
 
-vertex
-VertexShader(renderer_state *State,
-   			 u32 VertexID)
-{
-	vertex		Output;
-	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
-	m4			WVP = State->WVP;
-	u32			Stride = 5;
-
-	VertexID *= Stride;
-	
-	v3 Pos = FetchV3(Vertices, VertexID);
-	v2 TexCoord = FetchV2(Vertices, VertexID + 3);
-
-	Output.Pos = WVP * v4(Pos.x, Pos.y, Pos.z, 1.0f);
-	Output.TexCoord = TexCoord;
-
-	return (Output);
-}
-
 void
 DrawIndexed(renderer_state *State,
 			u32 IndexCount)
@@ -350,9 +320,9 @@ DrawIndexed(renderer_state *State,
 		u32 Idx1 = Stride * Indices[BaseID + 1];
 		u32 Idx2 = Stride * Indices[BaseID + 2];
 
-		vertex T0 = VertexShader(State, Idx0);
-		vertex T1 = VertexShader(State, Idx1);
-		vertex T2 = VertexShader(State, Idx2);
+		vertex T0 = State->VS(State, Idx0);
+		vertex T1 = State->VS(State, Idx1);
+		vertex T2 = State->VS(State, Idx2);
 
 		vertex ClippedVertices[12];
 
