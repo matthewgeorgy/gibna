@@ -281,22 +281,15 @@ UpdateDepths(u32 *BaseDepthPtr,
 
 #endif // SIMD_WIDTH
 
-#if 1
 void
 Draw(renderer_state *State,
 	 u32 VertexCount)
 {
-	m4 WVP = State->WVP;
-
 	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3)
 	{
-		u32 Idx0 = (BaseID + 0);
-		u32 Idx1 = (BaseID + 1);
-		u32 Idx2 = (BaseID + 2);
-
-		vertex T0 = State->VS(State, Idx0);
-		vertex T1 = State->VS(State, Idx1);
-		vertex T2 = State->VS(State, Idx2);
+		vertex T0 = State->VS(State, BaseID + 0);
+		vertex T1 = State->VS(State, BaseID + 1);
+		vertex T2 = State->VS(State, BaseID + 2);
 
 		vertex ClippedVertices[12];
 
@@ -314,9 +307,9 @@ Draw(renderer_state *State,
 			vertex V1 = TriangleBegin[1];
 			vertex V2 = TriangleBegin[2];
 
-			V0.Pos = PerspectiveDivide(V0.Pos);
-			V1.Pos = PerspectiveDivide(V1.Pos);
-			V2.Pos = PerspectiveDivide(V2.Pos);
+			PerspectiveDivide(&V0.Pos);
+			PerspectiveDivide(&V1.Pos);
+			PerspectiveDivide(&V2.Pos);
 
 			triangle Triangle;
 
@@ -328,24 +321,18 @@ Draw(renderer_state *State,
 		}
 	}
 }
-#endif
 
 void
 DrawIndexed(renderer_state *State,
 			u32 IndexCount)
 {
 	u32 *Indices = (u32 *)State->IndexBuffer.Data;
-	u32 Stride = 1;
 
 	for (u32 BaseID = 0; BaseID < IndexCount; BaseID += 3)
 	{
-		u32 Idx0 = Stride * Indices[BaseID + 0];
-		u32 Idx1 = Stride * Indices[BaseID + 1];
-		u32 Idx2 = Stride * Indices[BaseID + 2];
-
-		vertex T0 = State->VS(State, Idx0);
-		vertex T1 = State->VS(State, Idx1);
-		vertex T2 = State->VS(State, Idx2);
+		vertex T0 = State->VS(State, Indices[BaseID + 0]);
+		vertex T1 = State->VS(State, Indices[BaseID + 1]);
+		vertex T2 = State->VS(State, Indices[BaseID + 2]);
 
 		vertex ClippedVertices[12];
 
@@ -363,9 +350,9 @@ DrawIndexed(renderer_state *State,
 			vertex V1 = TriangleBegin[1];
 			vertex V2 = TriangleBegin[2];
 
-			V0.Pos = PerspectiveDivide(V0.Pos);
-			V1.Pos = PerspectiveDivide(V1.Pos);
-			V2.Pos = PerspectiveDivide(V2.Pos);
+			PerspectiveDivide(&V0.Pos);
+			PerspectiveDivide(&V1.Pos);
+			PerspectiveDivide(&V2.Pos);
 
 			triangle Triangle;
 
@@ -378,30 +365,40 @@ DrawIndexed(renderer_state *State,
 	}
 }
 
-buffer
-CreateBuffer(void *Data,
+b32					
+CreateBuffer(buffer *Buffer, 
+			 void *Data, 
 			 u32 Size)
 {
-	buffer		Buffer;
+	b32		Success = FALSE;
 
-	Buffer.Size = Size;
-	Buffer.Data = HeapAlloc(GetProcessHeap(), 0, Size);
-	CopyMemory(Buffer.Data, Data, Size);
+	Buffer->Size = Size;
+	Buffer->Data = HeapAlloc(GetProcessHeap(), 0, Size);
 
-	return (Buffer);
+	if (Buffer->Data)
+	{
+		CopyMemory(Buffer->Data, Data, Size);
+		Success = TRUE;
+	}
+
+	return (Success);
 }
 
-v4
-PerspectiveDivide(v4 V)
+void				
+DestroyBuffer(buffer *Buffer)
 {
-	v4		Result = V;
+	HeapFree(GetProcessHeap(), 0, Buffer->Data);
+	Buffer->Size = 0;
+}
 
-	Result.w = 1.0f / V.w;
-	Result.x *= Result.w;
-	Result.y *= Result.w;
-	Result.z *= Result.w;
+void
+PerspectiveDivide(v4 *V)
+{
+	V->w = 1.0f / V->w;
 
-	return (Result);
+	V->x *= V->w;
+	V->y *= V->w;
+	V->z *= V->w;
 }
 
 vertex
@@ -557,20 +554,30 @@ ClipTriangle(vertex *Begin,
 	return End;
 }
 
-texture				
-CreateTexture(const char *Filename)
+b32					
+CreateTexture(texture *Texture,
+			  const char *Filename)
 {
-	texture		Texture;
-	s32			NumComponents;
-	u8			*PixelData;
+	b32		Success = FALSE;
+	s32		NumComponents;
+	u8		*PixelData;
 
-	PixelData = stbi_load(Filename, &Texture.Width, &Texture.Height, &NumComponents, 4);
+	PixelData = stbi_load(Filename, &Texture->Width, &Texture->Height, &NumComponents, 4);
 
-	assert(PixelData != NULL);
+	if (PixelData != NULL)
+	{
+		Texture->Data = PixelData;
+	}
 
-	Texture.Data = PixelData;
+	return (Success);
+}
 
-	return (Texture);
+void
+DestroyTexture(texture *Texture)
+{
+	stbi_image_free(Texture->Data);
+	Texture->Width = 0;
+	Texture->Height = 0;
 }
 
 vertex_attribs		

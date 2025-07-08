@@ -10,10 +10,10 @@
    - Depth buffering
    - Clipping
    - Textures
+   - "Shaders" / rendering API
 
    TODO(matthew):
    - Improve mesh loading; more types of OBJs (and PLYs too???)
-   - "Shaders" / rendering API
 */
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -97,15 +97,17 @@ main(void)
 	array<f32>		SphereVertices;
 	array<u32>		SphereIndices;
 	mesh			CubeMesh;
+	buffer			SphereVB, SphereIB,
+					CubeVB;
 
 
 	GenerateSphere(&SphereVertices, &SphereIndices);
 	LoadMesh(&CubeMesh, "assets/cube.obj");
 
-	buffer SphereVB = CreateBuffer(SphereVertices.Data, SphereVertices.ByteSize());
-	buffer SphereIB = CreateBuffer(SphereIndices.Data, SphereIndices.ByteSize());
+	CreateBuffer(&SphereVB, SphereVertices.Data, SphereVertices.ByteSize());
+	CreateBuffer(&SphereIB, SphereIndices.Data, SphereIndices.ByteSize());
 
-	buffer CubeVB = CreateBuffer(CubeMesh.Vertices.Data, CubeMesh.Vertices.ByteSize());
+	CreateBuffer(&CubeVB, CubeMesh.Vertices.Data, CubeMesh.Vertices.ByteSize());
 
 	///////////////////////////////////
 	// Texture
@@ -113,7 +115,7 @@ main(void)
 	texture		Texture;
 
 
-	Texture = CreateTexture("assets/earth.jpg");
+	CreateTexture(&Texture, "assets/earth.jpg");
 
 	///////////////////////////////////
 	// Timers

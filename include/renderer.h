@@ -79,23 +79,31 @@ struct edge
 	wide_s32 Init(const v2_fp &V0, const v2_fp &V1, const v2_fp &P);
 };
 
+//**************************************
+//*** "Public" *************************
+//**************************************
 
-s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
-v2					NdcToRaster(v2 Point);
-b32  				FillRule(v2_fp Edge);
-void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
-v4					PerspectiveDivide(v4 V);
 void				Draw(renderer_state *State, u32 VertexCount);
 void				DrawIndexed(renderer_state *State, u32 IndexCount);
-buffer 				CreateBuffer(void *Data, u32 Size);
-texture				CreateTexture(const char *Filename);
-
-vertex_attribs		InterpolateAttributes(triangle *Triangle, weights Weights);
+b32					CreateBuffer(buffer *Buffer, void *Data, u32 Size);
+b32					CreateTexture(texture *Texture, const char *Filename);
+void				DestroyBuffer(buffer *Buffer);
+void				DestroyTexture(texture *Texture);
 wide_v3				SampleTexture(texture Texture, wide_v2 TexCoords);
 v2					FetchV2(f32 *Vertices, u32 VertexID);
 v3					FetchV3(f32 *Vertices, u32 VertexID);
 v4					FetchV4(f32 *Vertices, u32 VertexID);
 
+//**************************************
+//*** "Internal" ***********************
+//**************************************
+
+s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
+v2					NdcToRaster(v2 Point);
+b32  				FillRule(v2_fp Edge);
+void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
+void				PerspectiveDivide(v4 *V);
+vertex_attribs		InterpolateAttributes(triangle *Triangle, weights Weights);
 wide_v3				ConvertIntToFloatColors(wide_v3i IntColors);
 wide_v3i			ConvertFloatToIntColors(wide_v3 FloatColors);
 
