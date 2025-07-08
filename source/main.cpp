@@ -30,8 +30,11 @@
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 void				GenerateSphere(array<f32> *Vertices, array<u32> *Indices);
 
-vertex				VertexShader(renderer_state *State, u32 VertexID);
-wide_v3				PixelShader(renderer_state *State, vertex_attribs Attribs);
+vertex				SphereVS(renderer_state *State, u32 VertexID);
+wide_v3				SpherePS(renderer_state *State, vertex_attribs Attribs);
+
+vertex				CubeVS(renderer_state *State, u32 VertexID);
+wide_v3				CubePS(renderer_state *State, vertex_attribs Attribs);
 
 int
 main(void)
@@ -91,30 +94,18 @@ main(void)
 	///////////////////////////////////
 	// Vertices
 
-#if 0
-	f32		Vertices[] =
-	{
-		// Position				// Texture coordinates
-		-0.5f, -0.5f, 0.5f,		0.0f, 1.0f,
-		-0.5f,  0.5f, 0.5f,		0.0f, 0.0f,
-		 0.5f,  0.5f, 0.5f,		1.0f, 0.0f,
-		 0.5f, -0.5f, 0.5f,		1.0f, 1.0f,
-	};
-	u32		Indices[] =
-	{
-		0, 1, 2,
-		0, 2, 3,
-	};
-#else
-	array<f32>		Vertices;
-	array<u32>		Indices;
-
-	GenerateSphere(&Vertices, &Indices);
-#endif
+	array<f32>		SphereVertices;
+	array<u32>		SphereIndices;
+	mesh			CubeMesh;
 
 
-	buffer VertexBuffer = CreateBuffer(Vertices.Data, Vertices.ByteSize());
-	buffer IndexBuffer = CreateBuffer(Indices.Data, Indices.ByteSize());
+	GenerateSphere(&SphereVertices, &SphereIndices);
+	LoadMesh(&CubeMesh, "assets/cube.obj");
+
+	buffer SphereVB = CreateBuffer(SphereVertices.Data, SphereVertices.ByteSize());
+	buffer SphereIB = CreateBuffer(SphereIndices.Data, SphereIndices.ByteSize());
+
+	buffer CubeVB = CreateBuffer(CubeMesh.Vertices.Data, CubeMesh.Vertices.ByteSize());
 
 	///////////////////////////////////
 	// Texture
@@ -152,14 +143,10 @@ main(void)
 						Proj;
 
 
-	State.VertexBuffer = VertexBuffer;
-	State.IndexBuffer = IndexBuffer;
 	State.Bitmap = &Bitmap;
 	State.Texture = Texture;
-	State.VS = &VertexShader;
-	State.PS = &PixelShader;
 
-	Camera.Pos = v3(0, 0, -4);
+	Camera.Pos = v3(0, 2, -6);
 	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
 
@@ -184,14 +171,27 @@ main(void)
 			LARGE_INTEGER Start, End;
 			QueryPerformanceCounter(&Start);
 
+			// Sphere render
+			State.VertexBuffer = SphereVB;
+			State.IndexBuffer = SphereIB;
+			State.VS = SphereVS;
+			State.PS = SpherePS;
+
 			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Rotate(-90, v3(1, 0, 0));
 			State.WVP = Proj * View * World;
-			DrawIndexed(&State, Indices.Len());
+			DrawIndexed(&State, SphereIndices.Len());
+
+			// Cube render
+			State.VertexBuffer = CubeVB;
+			State.VS = CubeVS;
+			State.PS = CubePS;
+
+			World = Mat4Scale(0.5f) * Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 5.0f);
+			State.WVP = Proj * View * World;
+			Draw(&State, CubeMesh.Vertices.Len() / 2);
 
 			PresentBitmap(Bitmap);
-
 			Angle += 0.1f;
-
 			FrameCount += 1;
 
 			QueryPerformanceCounter(&End);
@@ -317,20 +317,9 @@ GenerateSphere(array<f32> *Vertices,
 	}
 }
 
-wide_v3
-PixelShader(renderer_state *State,
-			vertex_attribs Attribs)
-{
-	wide_v3		Output;
-
-	Output = SampleTexture(State->Texture, Attribs.TexCoords);
-
-	return (Output);
-}
-
 vertex
-VertexShader(renderer_state *State,
-			 u32 VertexID)
+SphereVS(renderer_state *State,
+		 u32 VertexID)
 {
 	vertex		Output;
 	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
@@ -348,4 +337,45 @@ VertexShader(renderer_state *State,
 	return (Output);
 }
 
+wide_v3
+SpherePS(renderer_state *State,
+		 vertex_attribs Attribs)
+{
+	wide_v3		Output;
+
+	Output = SampleTexture(State->Texture, Attribs.TexCoords);
+
+	return (Output);
+}
+
+vertex
+CubeVS(renderer_state *State,
+	   u32 VertexID)
+{
+	vertex		Output;
+	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
+	m4			WVP = State->WVP;
+	u32			Stride = 6;
+
+	VertexID *= Stride;
+	
+	v3 Pos = FetchV3(Vertices, VertexID);
+	v3 Color = FetchV3(Vertices, VertexID + 3);
+
+	Output.Pos = WVP * v4(Pos.x, Pos.y, Pos.z, 1.0f);
+	Output.Color = Color;
+
+	return (Output);
+}
+
+wide_v3
+CubePS(renderer_state *State,
+	   vertex_attribs Attribs)
+{
+	wide_v3		Output;
+
+	Output = Attribs.Colors;
+
+	return (Output);
+}
 

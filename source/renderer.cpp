@@ -281,37 +281,28 @@ UpdateDepths(u32 *BaseDepthPtr,
 
 #endif // SIMD_WIDTH
 
-#if 0
+#if 1
 void
 Draw(renderer_state *State,
 	 u32 VertexCount)
 {
-	v3 *Vertices = (v3 *)State->VertexBuffer.Data;
 	m4 WVP = State->WVP;
-	u32 Stride = 2;
 
 	for (u32 BaseID = 0; BaseID < VertexCount; BaseID += 3)
 	{
-		u32 Idx0 = Stride * (BaseID + 0);
-		u32 Idx1 = Stride * (BaseID + 1);
-		u32 Idx2 = Stride * (BaseID + 2);
+		u32 Idx0 = (BaseID + 0);
+		u32 Idx1 = (BaseID + 1);
+		u32 Idx2 = (BaseID + 2);
 
-		v3 Pos0 = Vertices[Idx0];
-		v3 Pos1 = Vertices[Idx1];
-		v3 Pos2 = Vertices[Idx2];
-		v3 Color0 = Vertices[Idx0 + 1];
-		v3 Color1 = Vertices[Idx1 + 1];
-		v3 Color2 = Vertices[Idx2 + 1];
-
-		v4 T0 = WVP * v4(Pos0.x, Pos0.y, Pos0.z, 1.0f);
-		v4 T1 = WVP * v4(Pos1.x, Pos1.y, Pos1.z, 1.0f);
-		v4 T2 = WVP * v4(Pos2.x, Pos2.y, Pos2.z, 1.0f);
+		vertex T0 = State->VS(State, Idx0);
+		vertex T1 = State->VS(State, Idx1);
+		vertex T2 = State->VS(State, Idx2);
 
 		vertex ClippedVertices[12];
 
-		ClippedVertices[0] = { T0, Color0 };
-		ClippedVertices[1] = { T1, Color1 };
-		ClippedVertices[2] = { T2, Color2 };
+		ClippedVertices[0] = T0;
+		ClippedVertices[1] = T1;
+		ClippedVertices[2] = T2;
 
 		vertex *ClippedVerticesEnd = ClipTriangle(ClippedVertices, ClippedVertices + 3);
 
@@ -323,11 +314,15 @@ Draw(renderer_state *State,
 			vertex V1 = TriangleBegin[1];
 			vertex V2 = TriangleBegin[2];
 
+			V0.Pos = PerspectiveDivide(V0.Pos);
+			V1.Pos = PerspectiveDivide(V1.Pos);
+			V2.Pos = PerspectiveDivide(V2.Pos);
+
 			triangle Triangle;
 
-			Triangle.V0 = { PerspectiveDivide(V0.Pos), V0.Color };
-			Triangle.V1 = { PerspectiveDivide(V1.Pos), V1.Color };
-			Triangle.V2 = { PerspectiveDivide(V2.Pos), V2.Color };
+			Triangle.V0 = V0;
+			Triangle.V1 = V1;
+			Triangle.V2 = V2;
 
 			RasterizeTriangle(State, Triangle);
 		}
