@@ -28,11 +28,6 @@ RasterizeTriangle(renderer_state *State,
 	MinY = ((s32)(Min(Min(V0.y, V1.y), V2.y)) >> FP_SHIFT);
 	MaxY = ((s32)(Max(Max(V0.y, V1.y), V2.y)) >> FP_SHIFT) + 1;
 	
-	// Align (round DOWN) starting pixel in X to SIMD width to prevent 
-	// overwriting into the next row.
-	// Eg, if MinX = 13 and SIMD_WIDTH=4, then new MinX = 12.
-	MinX = (MinX - (SIMD_WIDTH - 1)) & ~(SIMD_WIDTH - 1);
-
 	// Screen clipping
 	MinX = Max(MinX, 0);
 	MaxX = Min(MaxX, State->Bitmap->Width);
@@ -232,6 +227,13 @@ RenderPixels(bitmap *Bitmap,
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
 	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
 	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
+
+	// NOTE(matthew): If any of the components of PixelXCoordinates exceeds the
+	// bitmap width, these will overwrite pixels in the next row, which we don't 
+	// want. This prevents that.
+	wide_s32 PixelXCoordinates = wide_s32(X) + PixelIndices;
+	wide_s32 MaxXMask = wide_s32(Bitmap->Width - 1);
+	ActivePixelMask = ActivePixelMask & (PixelXCoordinates <= MaxXMask);
 
 	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
 	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);

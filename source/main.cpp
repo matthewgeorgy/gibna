@@ -100,8 +100,6 @@ main(void)
 
 	SetWindowLongPtr(Window, GWLP_USERDATA, (LONG_PTR)&Bitmap);
 
-	printf("here\n");
-
 	///////////////////////////////////
 	// Vertices
 
@@ -263,15 +261,12 @@ WndProc(HWND hWnd,
 
 			if (UserData)
 			{
-				printf("there\n");
 				u32 NewWidth = LOWORD(lParam);
 				u32 NewHeight = HIWORD(lParam);
 
 				bitmap *Bitmap = (bitmap *)UserData;
 
 				ResizeBitmap(Bitmap, NewWidth, NewHeight);
-
-				printf("%u %u\n", NewWidth, NewHeight);
 			}
 		} break;
 
