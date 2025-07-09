@@ -8,38 +8,38 @@
 #include <stdint.h>
 
 // Signed
-typedef char				s8;
-typedef short				s16;
-typedef int					s32;
-typedef long long			s64;
+typedef char                s8;
+typedef short               s16;
+typedef int                 s32;
+typedef long long           s64;
 
 // Unsigned
-typedef unsigned char		u8;
-typedef unsigned short		u16;
-typedef unsigned int		u32;
-typedef unsigned long long	u64;
+typedef unsigned char       u8;
+typedef unsigned short      u16;
+typedef unsigned int        u32;
+typedef unsigned long long  u64;
 
 // Float
-typedef float 				f32;
-typedef double 				f64;
+typedef float               f32;
+typedef double              f64;
 
 // Bool
-typedef s8					b8;
-typedef s32					b32;
+typedef s8                  b8;
+typedef s32                 b32;
 
 // Max values
-#define S8_MAX				INT8_MAX
-#define S16_MAX				INT16_MAX
-#define S32_MAX				INT32_MAX
-#define S64_MAX				INT64_MAX
+#define S8_MAX              INT8_MAX
+#define S16_MAX             INT16_MAX
+#define S32_MAX             INT32_MAX
+#define S64_MAX             INT64_MAX
 
-#define U8_MAX				UINT8_MAX
-#define U16_MAX				UINT16_MAX
-#define U32_MAX				UINT32_MAX
-#define U64_MAX				UINT64_MAX
+#define U8_MAX              UINT8_MAX
+#define U16_MAX             UINT16_MAX
+#define U32_MAX             UINT32_MAX
+#define U64_MAX             UINT64_MAX
 
-#define F32_MAX				FLT_MAX
-#define F64_MAX				DBL_MAX
+#define F32_MAX             FLT_MAX
+#define F64_MAX             DBL_MAX
 
 
 
@@ -55,18 +55,18 @@ typedef s32					b32;
 // Intrinsics
 ////////////////////////////////////////
 
-#define SquareRoot(__a)		std::sqrt(__a)
-#define Round(__a)			std::round(__a)
-#define Abs(__a)			std::abs(__a)
-#define Sin(__a)			std::sin(__a)
-#define Cos(__a)			std::cos(__a)
-#define Tan(__a)			std::tan(__a)
-#define DegsToRads(__a)		((__a) * 0.017453f)
-#define RadsToDegs(__a)		((__a) * 57.29578f)
-#define Min(__a, __b)		((__a) < (__b) ? (__a) : (__b))
-#define Max(__a, __b)		((__a) > (__b) ? (__a) : (__b))
-#define PI 					3.141592653589793f
-#define INV_PI				(1.0f / PI)
+#define SquareRoot(__a)     std::sqrt(__a)
+#define Round(__a)          std::round(__a)
+#define Abs(__a)            std::abs(__a)
+#define Sin(__a)            std::sin(__a)
+#define Cos(__a)            std::cos(__a)
+#define Tan(__a)            std::tan(__a)
+#define DegsToRads(__a)     ((__a) * 0.017453f)
+#define RadsToDegs(__a)     ((__a) * 57.29578f)
+#define Min(__a, __b)       ((__a) < (__b) ? (__a) : (__b))
+#define Max(__a, __b)       ((__a) > (__b) ? (__a) : (__b))
+#define PI                  3.141592653589793f
+#define INV_PI              (1.0f / PI)
 
 ////////////////////////////////////////
 // V2
@@ -74,184 +74,184 @@ typedef s32					b32;
 
 union v2
 {
-	struct { f32 x, y; };
-	struct { f32 r, g; };
-	struct { f32 u, v; };
-	f32 Elements[2];
+    struct { f32 x, y; };
+    struct { f32 r, g; };
+    struct { f32 u, v; };
+    f32 Elements[2];
 
 
-	v2(void);
-	v2(f32 x, f32 y);
+    v2(void);
+    v2(f32 x, f32 y);
 
 
-	v2		operator-(void);
-	f32		&operator[](const u32 Component);
+    v2      operator-(void);
+    f32     &operator[](const u32 Component);
 
-	v2 		&operator+=(const v2 &V);
-	v2 		&operator-=(const v2 &V);
-	v2 		&operator*=(const f32 T);
-	v2 		&operator/=(const f32 T);
+    v2      &operator+=(const v2 &V);
+    v2      &operator-=(const v2 &V);
+    v2      &operator*=(const f32 T);
+    v2      &operator/=(const f32 T);
 };
 
-v2		operator+(const v2 &U, const v2 &V);
-v2		operator-(const v2 &U, const v2 &V);
-v2		operator*(const f32 T, const v2 &U);
-v2		operator/(const v2 &U, const f32 T);
-f32		Dot(const v2 &U, const v2 &V);
-f32 	Length(const v2 &V);
-f32 	LengthSquared(const v2 &V);
-v2 		Normalize(const v2 &V);
-v2 		Hadamard(const v2 &U, const v2 &V);
+v2      operator+(const v2 &U, const v2 &V);
+v2      operator-(const v2 &U, const v2 &V);
+v2      operator*(const f32 T, const v2 &U);
+v2      operator/(const v2 &U, const f32 T);
+f32     Dot(const v2 &U, const v2 &V);
+f32     Length(const v2 &V);
+f32     LengthSquared(const v2 &V);
+v2      Normalize(const v2 &V);
+v2      Hadamard(const v2 &U, const v2 &V);
 
 #ifdef MG_IMPL
 
 v2::v2(void)
 {
-	this->x = 0;
-	this->y = 0;
+    this->x = 0;
+    this->y = 0;
 }
 
 v2::v2(f32 x,
-	   f32 y)
+       f32 y)
 {
-	this->x = x;
-	this->y = y;
+    this->x = x;
+    this->y = y;
 }
 
 v2
 v2::operator-(void)
 {
-	this->x *= -1;
-	this->y *= -1;
+    this->x *= -1;
+    this->y *= -1;
 
-	return (*this);
+    return (*this);
 }
 
-f32	&
+f32 &
 v2::operator[](const u32 Component)
 {
-	return (this->Elements[Component]);
+    return (this->Elements[Component]);
 }
 
 v2 &
 v2::operator+=(const v2 &V)
 {
-	this->x += V.x;
-	this->y += V.y;
+    this->x += V.x;
+    this->y += V.y;
 
-	return (*this);
+    return (*this);
 }
 
 v2 &
 v2::operator-=(const v2 &V)
 {
-	this->x -= V.x;
-	this->y -= V.y;
+    this->x -= V.x;
+    this->y -= V.y;
 
-	return (*this);
+    return (*this);
 }
 
 v2 &
 v2::operator*=(const f32 T)
 {
-	this->x *= T;
-	this->y *= T;
+    this->x *= T;
+    this->y *= T;
 
-	return (*this);
+    return (*this);
 }
 
 v2 &
 v2::operator/=(const f32 T)
 {
-	this->x /= T;
-	this->y /= T;
+    this->x /= T;
+    this->y /= T;
 
-	return (*this);
+    return (*this);
 }
 
 v2
 operator+(const v2 &U,
-	  	  const v2 &V)
+          const v2 &V)
 {
-	v2 Result;
+    v2 Result;
 
-	Result.x = U.x + V.x;
-	Result.y = U.y + V.y;
+    Result.x = U.x + V.x;
+    Result.y = U.y + V.y;
 
-	return (Result);
+    return (Result);
 }
 
 v2
 operator-(const v2 &U,
-		  const v2 &V)
+          const v2 &V)
 {
-	v2 Result;
+    v2 Result;
 
-	Result.x = U.x - V.x;
-	Result.y = U.y - V.y;
+    Result.x = U.x - V.x;
+    Result.y = U.y - V.y;
 
-	return (Result);
+    return (Result);
 }
 
 v2
 operator*(const f32 T,
-		  const v2 &V)
+          const v2 &V)
 {
-	v2 Result;
+    v2 Result;
 
-	Result.x = T * V.x;
-	Result.y = T * V.y;
+    Result.x = T * V.x;
+    Result.y = T * V.y;
 
-	return Result;
+    return Result;
 }
 
 v2
 operator/(const v2 &V,
-		  const f32 T)
+          const f32 T)
 {
-	v2 Result;
+    v2 Result;
 
-	Result.x = V.x / T;
-	Result.y = V.y / T;
+    Result.x = V.x / T;
+    Result.y = V.y / T;
 
-	return Result;
+    return Result;
 }
 
 f32
 Dot(const v2 &U,
-	const v2 &V)
+    const v2 &V)
 {
-	return (U.x * V.x) + (U.y * V.y);
+    return (U.x * V.x) + (U.y * V.y);
 }
 
 f32
 Length(const v2 &V)
 {
-	return SquareRoot(Dot(V, V));
+    return SquareRoot(Dot(V, V));
 }
 
 f32
 LengthSquared(const v2 &V)
 {
-	return Dot(V, V);
+    return Dot(V, V);
 }
 
 v2
 Normalize(const v2 &V)
 {
-	return V / Length(V);
+    return V / Length(V);
 }
 
-v2 		
+v2      
 Hadamard(const v2 &U, 
-		 const v2 &V)
+         const v2 &V)
 {
-	v2 Result;
+    v2 Result;
 
-	Result.x = U.x * V.x;
-	Result.y = U.y * V.y;
+    Result.x = U.x * V.x;
+    Result.y = U.y * V.y;
 
-	return (Result);
+    return (Result);
 }
 
 #endif // MG_IMPL
@@ -262,153 +262,153 @@ Hadamard(const v2 &U,
 
 union v2i
 {
-	struct { s32 x, y; };
-	struct { s32 r, g; };
-	struct { s32 u, v; };
-	s32 Elements[2];
+    struct { s32 x, y; };
+    struct { s32 r, g; };
+    struct { s32 u, v; };
+    s32 Elements[2];
 
 
-	v2i(void);
-	v2i(s32 x, s32 y);
+    v2i(void);
+    v2i(s32 x, s32 y);
 
 
-	v2i		operator-(void);
-	s32		&operator[](const u32 Component);
+    v2i     operator-(void);
+    s32     &operator[](const u32 Component);
 
-	v2i 		&operator+=(const v2i &V);
-	v2i 		&operator-=(const v2i &V);
-	v2i 		&operator*=(const s32 T);
+    v2i         &operator+=(const v2i &V);
+    v2i         &operator-=(const v2i &V);
+    v2i         &operator*=(const s32 T);
 };
 
-v2i		operator+(const v2i &U, const v2i &V);
-v2i		operator-(const v2i &U, const v2i &V);
-v2i		operator*(const s32 T, const v2i &U);
-v2i		operator/(const v2i &U, const s32 T);
-s32		Dot(const v2i &U, const v2i &V);
-v2i		Hadamard(const v2i &U, const v2i &V);
+v2i     operator+(const v2i &U, const v2i &V);
+v2i     operator-(const v2i &U, const v2i &V);
+v2i     operator*(const s32 T, const v2i &U);
+v2i     operator/(const v2i &U, const s32 T);
+s32     Dot(const v2i &U, const v2i &V);
+v2i     Hadamard(const v2i &U, const v2i &V);
 
 #ifdef MG_IMPL
 
 v2i::v2i(void)
 {
-	this->x = 0;
-	this->y = 0;
+    this->x = 0;
+    this->y = 0;
 }
 
 v2i::v2i(s32 x,
-	   s32 y)
+       s32 y)
 {
-	this->x = x;
-	this->y = y;
+    this->x = x;
+    this->y = y;
 }
 
 v2i
 v2i::operator-(void)
 {
-	this->x *= -1;
-	this->y *= -1;
+    this->x *= -1;
+    this->y *= -1;
 
-	return (*this);
+    return (*this);
 }
 
-s32	&
+s32 &
 v2i::operator[](const u32 Component)
 {
-	return (this->Elements[Component]);
+    return (this->Elements[Component]);
 }
 
 v2i &
 v2i::operator+=(const v2i &V)
 {
-	this->x += V.x;
-	this->y += V.y;
+    this->x += V.x;
+    this->y += V.y;
 
-	return (*this);
+    return (*this);
 }
 
 v2i &
 v2i::operator-=(const v2i &V)
 {
-	this->x -= V.x;
-	this->y -= V.y;
+    this->x -= V.x;
+    this->y -= V.y;
 
-	return (*this);
+    return (*this);
 }
 
 v2i &
 v2i::operator*=(const s32 T)
 {
-	this->x *= T;
-	this->y *= T;
+    this->x *= T;
+    this->y *= T;
 
-	return (*this);
+    return (*this);
 }
 
 v2i
 operator+(const v2i &U,
-	  	  const v2i &V)
+          const v2i &V)
 {
-	v2i Result;
+    v2i Result;
 
-	Result.x = U.x + V.x;
-	Result.y = U.y + V.y;
+    Result.x = U.x + V.x;
+    Result.y = U.y + V.y;
 
-	return (Result);
+    return (Result);
 }
 
 v2i
 operator-(const v2i &U,
-		  const v2i &V)
+          const v2i &V)
 {
-	v2i Result;
+    v2i Result;
 
-	Result.x = U.x - V.x;
-	Result.y = U.y - V.y;
+    Result.x = U.x - V.x;
+    Result.y = U.y - V.y;
 
-	return (Result);
+    return (Result);
 }
 
 v2i
 operator*(const s32 T,
-		  const v2i &V)
+          const v2i &V)
 {
-	v2i Result;
+    v2i Result;
 
-	Result.x = T * V.x;
-	Result.y = T * V.y;
+    Result.x = T * V.x;
+    Result.y = T * V.y;
 
-	return Result;
+    return Result;
 }
 
 v2i
 operator/(const v2i &V,
-		  const s32 T)
+          const s32 T)
 {
-	v2i Result;
+    v2i Result;
 
-	Result.x = V.x / T;
-	Result.y = V.y / T;
+    Result.x = V.x / T;
+    Result.y = V.y / T;
 
-	return Result;
+    return Result;
 }
 
 s32
 Dot(const v2i &U,
-	const v2i &V)
+    const v2i &V)
 {
-	return (U.x * V.x) + (U.y * V.y);
+    return (U.x * V.x) + (U.y * V.y);
 }
 
-v2i 		
+v2i         
 Hadamard(const v2i &U, 
-		 const v2i &V)
+         const v2i &V)
 {
-	v2i Result;
+    v2i Result;
 
-	Result.x = U.x * V.x;
-	Result.y = U.y * V.y;
+    Result.x = U.x * V.x;
+    Result.y = U.y * V.y;
 
-	return (Result);
+    return (Result);
 }
 
 #endif // MG_IMPL
@@ -419,143 +419,143 @@ Hadamard(const v2i &U,
 
 union v2u
 {
-	struct { u32 x, y; };
-	struct { u32 r, g; };
-	struct { u32 u, v; };
-	u32 Elements[2];
+    struct { u32 x, y; };
+    struct { u32 r, g; };
+    struct { u32 u, v; };
+    u32 Elements[2];
 
 
-	v2u(void);
-	v2u(u32 x, u32 y);
+    v2u(void);
+    v2u(u32 x, u32 y);
 
 
-	u32		&operator[](const u32 Component);
+    u32     &operator[](const u32 Component);
 
-	v2u 		&operator+=(const v2u &V);
-	v2u 		&operator-=(const v2u &V);
-	v2u 		&operator*=(const u32 T);
+    v2u         &operator+=(const v2u &V);
+    v2u         &operator-=(const v2u &V);
+    v2u         &operator*=(const u32 T);
 };
 
-v2u		operator+(const v2u &U, const v2u &V);
-v2u		operator-(const v2u &U, const v2u &V);
-v2u		operator*(const u32 T, const v2u &U);
-v2u		operator/(const v2u &U, const u32 T);
-u32		Dot(const v2u &U, const v2u &V);
-v2u		Hadamard(const v2u &U, const v2u &V);
+v2u     operator+(const v2u &U, const v2u &V);
+v2u     operator-(const v2u &U, const v2u &V);
+v2u     operator*(const u32 T, const v2u &U);
+v2u     operator/(const v2u &U, const u32 T);
+u32     Dot(const v2u &U, const v2u &V);
+v2u     Hadamard(const v2u &U, const v2u &V);
 
 #ifdef MG_IMPL
 
 v2u::v2u(void)
 {
-	this->x = 0;
-	this->y = 0;
+    this->x = 0;
+    this->y = 0;
 }
 
 v2u::v2u(u32 x,
-	   u32 y)
+       u32 y)
 {
-	this->x = x;
-	this->y = y;
+    this->x = x;
+    this->y = y;
 }
 
-u32	&
+u32 &
 v2u::operator[](const u32 Component)
 {
-	return (this->Elements[Component]);
+    return (this->Elements[Component]);
 }
 
 v2u &
 v2u::operator+=(const v2u &V)
 {
-	this->x += V.x;
-	this->y += V.y;
+    this->x += V.x;
+    this->y += V.y;
 
-	return (*this);
+    return (*this);
 }
 
 v2u &
 v2u::operator-=(const v2u &V)
 {
-	this->x -= V.x;
-	this->y -= V.y;
+    this->x -= V.x;
+    this->y -= V.y;
 
-	return (*this);
+    return (*this);
 }
 
 v2u &
 v2u::operator*=(const u32 T)
 {
-	this->x *= T;
-	this->y *= T;
+    this->x *= T;
+    this->y *= T;
 
-	return (*this);
+    return (*this);
 }
 
 v2u
 operator+(const v2u &U,
-	  	  const v2u &V)
+          const v2u &V)
 {
-	v2u Result;
+    v2u Result;
 
-	Result.x = U.x + V.x;
-	Result.y = U.y + V.y;
+    Result.x = U.x + V.x;
+    Result.y = U.y + V.y;
 
-	return (Result);
+    return (Result);
 }
 
 v2u
 operator-(const v2u &U,
-		  const v2u &V)
+          const v2u &V)
 {
-	v2u Result;
+    v2u Result;
 
-	Result.x = U.x - V.x;
-	Result.y = U.y - V.y;
+    Result.x = U.x - V.x;
+    Result.y = U.y - V.y;
 
-	return (Result);
+    return (Result);
 }
 
 v2u
 operator*(const u32 T,
-		  const v2u &V)
+          const v2u &V)
 {
-	v2u Result;
+    v2u Result;
 
-	Result.x = T * V.x;
-	Result.y = T * V.y;
+    Result.x = T * V.x;
+    Result.y = T * V.y;
 
-	return Result;
+    return Result;
 }
 
 v2u
 operator/(const v2u &V,
-		  const u32 T)
+          const u32 T)
 {
-	v2u Result;
+    v2u Result;
 
-	Result.x = V.x / T;
-	Result.y = V.y / T;
+    Result.x = V.x / T;
+    Result.y = V.y / T;
 
-	return Result;
+    return Result;
 }
 
 u32
 Dot(const v2u &U,
-	const v2u &V)
+    const v2u &V)
 {
-	return (U.x * V.x) + (U.y * V.y);
+    return (U.x * V.x) + (U.y * V.y);
 }
 
-v2u 		
+v2u         
 Hadamard(const v2u &U, 
-		 const v2u &V)
+         const v2u &V)
 {
-	v2u Result;
+    v2u Result;
 
-	Result.x = U.x * V.x;
-	Result.y = U.y * V.y;
+    Result.x = U.x * V.x;
+    Result.y = U.y * V.y;
 
-	return (Result);
+    return (Result);
 }
 
 #endif // MG_IMPL
@@ -566,239 +566,239 @@ Hadamard(const v2u &U,
 
 union v3
 {
-	struct { f32 x, y, z; };
-	struct { f32 r, g, b; };
-	struct { f32 u, v, w; };
-	f32 Elements[3];
+    struct { f32 x, y, z; };
+    struct { f32 r, g, b; };
+    struct { f32 u, v, w; };
+    f32 Elements[3];
 
 
-	v3(void);
-	v3(f32 x, f32 y, f32 z);
+    v3(void);
+    v3(f32 x, f32 y, f32 z);
 
 
-	v3		operator-(void);
-	f32		&operator[](const u32 Component);
+    v3      operator-(void);
+    f32     &operator[](const u32 Component);
 
-	v3 		&operator+=(const v3 &V);
-	v3 		&operator-=(const v3 &V);
-	v3 		&operator*=(const f32 T);
-	v3 		&operator/=(const f32 T);
+    v3      &operator+=(const v3 &V);
+    v3      &operator-=(const v3 &V);
+    v3      &operator*=(const f32 T);
+    v3      &operator/=(const f32 T);
 };
 
-v3		operator+(const v3 &U, const v3 &V);
-v3		operator-(const v3 &U, const v3 &V);
-v3		operator*(const f32 T, const v3 &U);
-v3		operator/(const v3 &U, const f32 T);
-f32		Dot(const v3 &U, const v3 &V);
-v3		Cross(const v3 &U, const v3 &V);
-f32 	Length(const v3 &V);
-f32 	LengthSquared(const v3 &V);
-v3 		Normalize(const v3 &V);
-v3 		Hadamard(const v3 &U, const v3 &V);
-v3 		MinV3(const v3 &U, const v3 &V);
-v3 		MaxV3(const v3 &U, const v3 &V);
+v3      operator+(const v3 &U, const v3 &V);
+v3      operator-(const v3 &U, const v3 &V);
+v3      operator*(const f32 T, const v3 &U);
+v3      operator/(const v3 &U, const f32 T);
+f32     Dot(const v3 &U, const v3 &V);
+v3      Cross(const v3 &U, const v3 &V);
+f32     Length(const v3 &V);
+f32     LengthSquared(const v3 &V);
+v3      Normalize(const v3 &V);
+v3      Hadamard(const v3 &U, const v3 &V);
+v3      MinV3(const v3 &U, const v3 &V);
+v3      MaxV3(const v3 &U, const v3 &V);
 
 #ifdef MG_IMPL
 
 v3::v3(void)
 {
-	this->x = 0;
-	this->y = 0;
-	this->z = 0;
+    this->x = 0;
+    this->y = 0;
+    this->z = 0;
 }
 
 v3::v3(f32 x,
-	   f32 y,
-	   f32 z)
+       f32 y,
+       f32 z)
 {
-	this->x = x;
-	this->y = y;
-	this->z = z;
+    this->x = x;
+    this->y = y;
+    this->z = z;
 }
 
 v3
 v3::operator-(void)
 {
-	this->x *= -1;
-	this->y *= -1;
-	this->z *= -1;
+    this->x *= -1;
+    this->y *= -1;
+    this->z *= -1;
 
-	return (*this);
+    return (*this);
 }
 
-f32	&
+f32 &
 v3::operator[](const u32 Component)
 {
-	return (this->Elements[Component]);
+    return (this->Elements[Component]);
 }
 
 v3 &
 v3::operator+=(const v3 &V)
 {
-	this->x += V.x;
-	this->y += V.y;
-	this->z += V.z;
+    this->x += V.x;
+    this->y += V.y;
+    this->z += V.z;
 
-	return (*this);
+    return (*this);
 }
 
 v3 &
 v3::operator-=(const v3 &V)
 {
-	this->x -= V.x;
-	this->y -= V.y;
-	this->z -= V.z;
+    this->x -= V.x;
+    this->y -= V.y;
+    this->z -= V.z;
 
-	return (*this);
+    return (*this);
 }
 
 v3 &
 v3::operator*=(const f32 T)
 {
-	this->x *= T;
-	this->y *= T;
-	this->z *= T;
+    this->x *= T;
+    this->y *= T;
+    this->z *= T;
 
-	return (*this);
+    return (*this);
 }
 
 v3 &
 v3::operator/=(const f32 T)
 {
-	this->x /= T;
-	this->y /= T;
-	this->z /= T;
+    this->x /= T;
+    this->y /= T;
+    this->z /= T;
 
-	return (*this);
+    return (*this);
 }
 
 v3
 operator+(const v3 &U,
-	  	  const v3 &V)
+          const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = U.x + V.x;
-	Result.y = U.y + V.y;
-	Result.z = U.z + V.z;
+    Result.x = U.x + V.x;
+    Result.y = U.y + V.y;
+    Result.z = U.z + V.z;
 
-	return (Result);
+    return (Result);
 }
 
 v3
 operator-(const v3 &U,
-		  const v3 &V)
+          const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = U.x - V.x;
-	Result.y = U.y - V.y;
-	Result.z = U.z - V.z;
+    Result.x = U.x - V.x;
+    Result.y = U.y - V.y;
+    Result.z = U.z - V.z;
 
-	return (Result);
+    return (Result);
 }
 
 v3
 operator*(const f32 T,
-		  const v3 &V)
+          const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = T * V.x;
-	Result.y = T * V.y;
-	Result.z = T * V.z;
+    Result.x = T * V.x;
+    Result.y = T * V.y;
+    Result.z = T * V.z;
 
-	return Result;
+    return Result;
 }
 
 v3
 operator/(const v3 &V,
-		  const f32 T)
+          const f32 T)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = V.x / T;
-	Result.y = V.y / T;
-	Result.z = V.z / T;
+    Result.x = V.x / T;
+    Result.y = V.y / T;
+    Result.z = V.z / T;
 
-	return Result;
+    return Result;
 }
 
 f32
 Dot(const v3 &U,
-	const v3 &V)
+    const v3 &V)
 {
-	return (U.x * V.x) + (U.y * V.y) + (U.z * V.z);
+    return (U.x * V.x) + (U.y * V.y) + (U.z * V.z);
 }
 
 v3
 Cross(const v3 &U,
-	  const v3 &V)
+      const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = U.y * V.z - U.z * V.y;
-	Result.y = U.z * V.x - U.x * V.z;
-	Result.z = U.x * V.y - U.y * V.x;
+    Result.x = U.y * V.z - U.z * V.y;
+    Result.y = U.z * V.x - U.x * V.z;
+    Result.z = U.x * V.y - U.y * V.x;
 
-	return Result;
+    return Result;
 }
 
 f32
 Length(const v3 &V)
 {
-	return SquareRoot(Dot(V, V));
+    return SquareRoot(Dot(V, V));
 }
 
 f32
 LengthSquared(const v3 &V)
 {
-	return Dot(V, V);
+    return Dot(V, V);
 }
 
 v3
 Normalize(const v3 &V)
 {
-	return V / Length(V);
+    return V / Length(V);
 }
 
-v3 		
+v3      
 Hadamard(const v3 &U, 
-		 const v3 &V)
+         const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = U.x * V.x;
-	Result.y = U.y * V.y;
-	Result.z = U.z * V.z;
+    Result.x = U.x * V.x;
+    Result.y = U.y * V.y;
+    Result.z = U.z * V.z;
 
-	return (Result);
+    return (Result);
 }
 
-v3 		
+v3      
 MinV3(const v3 &U, 
-	  const v3 &V)
+      const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = Min(U.x, V.x);
-	Result.y = Min(U.y, V.y);
-	Result.z = Min(U.z, V.z);
+    Result.x = Min(U.x, V.x);
+    Result.y = Min(U.y, V.y);
+    Result.z = Min(U.z, V.z);
 
-	return Result;
+    return Result;
 }
 
-v3 		
+v3      
 MaxV3(const v3 &U, 
-	  const v3 &V)
+      const v3 &V)
 {
-	v3 Result;
+    v3 Result;
 
-	Result.x = Max(U.x, V.x);
-	Result.y = Max(U.y, V.y);
-	Result.z = Max(U.z, V.z);
+    Result.x = Max(U.x, V.x);
+    Result.y = Max(U.y, V.y);
+    Result.z = Max(U.z, V.z);
 
-	return Result;
+    return Result;
 }
 
 #endif // MG_IMPL
@@ -809,140 +809,140 @@ MaxV3(const v3 &U,
 
 union v3i
 {
-	struct { s32 x, y, z; };
-	struct { s32 r, g, b; };
-	struct { s32 u, v, w; };
-	s32 Elements[3];
+    struct { s32 x, y, z; };
+    struct { s32 r, g, b; };
+    struct { s32 u, v, w; };
+    s32 Elements[3];
 
 
-	v3i(void);
-	v3i(s32 x, s32 y, s32 z);
+    v3i(void);
+    v3i(s32 x, s32 y, s32 z);
 
 
-	v3i		operator-(void);
-	s32		&operator[](const u32 Component);
+    v3i     operator-(void);
+    s32     &operator[](const u32 Component);
 
-	v3i 	&operator+=(const v3i &V);
-	v3i 	&operator-=(const v3i &V);
+    v3i     &operator+=(const v3i &V);
+    v3i     &operator-=(const v3i &V);
 };
 
-v3i		operator+(const v3i &U, const v3i &V);
-v3i		operator-(const v3i &U, const v3i &V);
-v3i		operator*(const s32 T, const v3i &U);
-s32		Dot(const v3i &U, const v3i &V);
-v3i 	Hadamard(const v3i &U, const v3i &V);
+v3i     operator+(const v3i &U, const v3i &V);
+v3i     operator-(const v3i &U, const v3i &V);
+v3i     operator*(const s32 T, const v3i &U);
+s32     Dot(const v3i &U, const v3i &V);
+v3i     Hadamard(const v3i &U, const v3i &V);
 
 #ifdef MG_IMPL
 
 v3i::v3i(void)
 {
-	this->x = 0;
-	this->y = 0;
-	this->z = 0;
+    this->x = 0;
+    this->y = 0;
+    this->z = 0;
 }
 
 v3i::v3i(s32 x,
-		 s32 y, 
-		 s32 z)
+         s32 y, 
+         s32 z)
 {
-	this->x = x;
-	this->y = y;
-	this->z = z;
+    this->x = x;
+    this->y = y;
+    this->z = z;
 }
 
-v3i		
+v3i     
 v3i::operator-(void)
 {
-	this->x *= -1;
-	this->y *= -1;
-	this->z *= -1;
+    this->x *= -1;
+    this->y *= -1;
+    this->z *= -1;
 
-	return (*this);
+    return (*this);
 }
 
 s32 &
 v3i::operator[](const u32 Component)
 {
-	return (this->Elements[Component]);
+    return (this->Elements[Component]);
 }
 
 v3i &
 v3i::operator+=(const v3i &V)
 {
-	this->x += V.x;
-	this->y += V.y;
-	this->z += V.z;
+    this->x += V.x;
+    this->y += V.y;
+    this->z += V.z;
 
-	return (*this);
+    return (*this);
 }
 
 v3i &
 v3i::operator-=(const v3i &V)
 {
-	this->x -= V.x;
-	this->y -= V.y;
-	this->z -= V.z;
+    this->x -= V.x;
+    this->y -= V.y;
+    this->z -= V.z;
 
-	return (*this);
+    return (*this);
 }
 
-v3i		
+v3i     
 operator+(const v3i &U, 
-		  const v3i &V)
+          const v3i &V)
 {
-	v3i		Result;
+    v3i     Result;
 
-	Result.x = U.x + V.x;
-	Result.y = U.y + V.y;
-	Result.z = U.z + V.z;
+    Result.x = U.x + V.x;
+    Result.y = U.y + V.y;
+    Result.z = U.z + V.z;
 
-	return (Result);
+    return (Result);
 }
 
-v3i		
+v3i     
 operator-(const v3i &U, 
-		  const v3i &V)
+          const v3i &V)
 {
-	v3i		Result;
+    v3i     Result;
 
-	Result.x = U.x - V.x;
-	Result.y = U.y - V.y;
-	Result.z = U.z - V.z;
+    Result.x = U.x - V.x;
+    Result.y = U.y - V.y;
+    Result.z = U.z - V.z;
 
-	return (Result);
+    return (Result);
 }
 
-v3i		
+v3i     
 operator*(const s32 T, 
-		  const v3i &U)
+          const v3i &U)
 {
-	v3i		Result;
+    v3i     Result;
 
-	Result.x = T * U.x;
-	Result.y = T * U.y;
-	Result.z = T * U.z;
+    Result.x = T * U.x;
+    Result.y = T * U.y;
+    Result.z = T * U.z;
 
-	return (Result);
+    return (Result);
 }
 
-s32		
+s32     
 Dot(const v3i &U, 
-	const v3i &V)
+    const v3i &V)
 {
-	return (U.x * V.x) + (U.y * V.y) + (U.z * V.z);
+    return (U.x * V.x) + (U.y * V.y) + (U.z * V.z);
 }
 
-v3i 	
+v3i     
 Hadamard(const v3i &U, 
-		 const v3i &V)
+         const v3i &V)
 {
-	v3i		Result;
+    v3i     Result;
 
-	Result.x = U.x * V.x;
-	Result.y = U.y * V.y;
-	Result.z = U.z * V.z;
+    Result.x = U.x * V.x;
+    Result.y = U.y * V.y;
+    Result.z = U.z * V.z;
 
-	return (Result);
+    return (Result);
 }
 
 #endif MG_IMPL
@@ -953,210 +953,210 @@ Hadamard(const v3i &U,
 
 union v4
 {
-	struct { f32 x, y, z, w; };
-	struct { f32 r, g, b, a; };
-	f32 Elements[4];
+    struct { f32 x, y, z, w; };
+    struct { f32 r, g, b, a; };
+    f32 Elements[4];
 
 
-	v4(void);
-	v4(f32 x, f32 y, f32 z, f32 w);
+    v4(void);
+    v4(f32 x, f32 y, f32 z, f32 w);
 
 
-	v4		operator-(void);
-	f32		&operator[](const u32 Component);
+    v4      operator-(void);
+    f32     &operator[](const u32 Component);
 
-	v4 		&operator+=(const v4 &V);
-	v4 		&operator-=(const v4 &V);
-	v4 		&operator*=(const f32 T);
-	v4 		&operator/=(const f32 T);
+    v4      &operator+=(const v4 &V);
+    v4      &operator-=(const v4 &V);
+    v4      &operator*=(const f32 T);
+    v4      &operator/=(const f32 T);
 };
 
-v4		operator+(const v4 &U, const v4 &V);
-v4		operator-(const v4 &U, const v4 &V);
-v4		operator*(const f32 T, const v4 &U);
-v4		operator/(const v4 &U, const f32 T);
-f32		Dot(const v4 &U, const v4 &V);
-f32 	Length(const v4 &V);
-f32 	LengthSquared(const v4 &V);
-v4 		Normalize(const v4 &V);
-v4 		Hadamard(const v4 &U, const v4 &V);
+v4      operator+(const v4 &U, const v4 &V);
+v4      operator-(const v4 &U, const v4 &V);
+v4      operator*(const f32 T, const v4 &U);
+v4      operator/(const v4 &U, const f32 T);
+f32     Dot(const v4 &U, const v4 &V);
+f32     Length(const v4 &V);
+f32     LengthSquared(const v4 &V);
+v4      Normalize(const v4 &V);
+v4      Hadamard(const v4 &U, const v4 &V);
 
 #ifdef MG_IMPL
 
 v4::v4(void)
 {
-	this->x = 0;
-	this->y = 0;
-	this->z = 0;
-	this->w = 0;
+    this->x = 0;
+    this->y = 0;
+    this->z = 0;
+    this->w = 0;
 }
 
 v4::v4(f32 x,
-	   f32 y,
-	   f32 z,
-	   f32 w)
+       f32 y,
+       f32 z,
+       f32 w)
 {
-	this->x = x;
-	this->y = y;
-	this->z = z;
-	this->w = w;
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    this->w = w;
 }
 
 v4
 v4::operator-(void)
 {
-	this->x *= -1;
-	this->y *= -1;
-	this->z *= -1;
-	this->w *= -1;
+    this->x *= -1;
+    this->y *= -1;
+    this->z *= -1;
+    this->w *= -1;
 
-	return (*this);
+    return (*this);
 }
 
-f32	&
+f32 &
 v4::operator[](const u32 Component)
 {
-	return (this->Elements[Component]);
+    return (this->Elements[Component]);
 }
 
 v4 &
 v4::operator+=(const v4 &V)
 {
-	this->x += V.x;
-	this->y += V.y;
-	this->z += V.z;
-	this->w += V.w;
+    this->x += V.x;
+    this->y += V.y;
+    this->z += V.z;
+    this->w += V.w;
 
-	return (*this);
+    return (*this);
 }
 
 v4 &
 v4::operator-=(const v4 &V)
 {
-	this->x -= V.x;
-	this->y -= V.y;
-	this->z -= V.z;
-	this->w -= V.w;
+    this->x -= V.x;
+    this->y -= V.y;
+    this->z -= V.z;
+    this->w -= V.w;
 
-	return (*this);
+    return (*this);
 }
 
 v4 &
 v4::operator*=(const f32 T)
 {
-	this->x *= T;
-	this->y *= T;
-	this->z *= T;
-	this->w *= T;
+    this->x *= T;
+    this->y *= T;
+    this->z *= T;
+    this->w *= T;
 
-	return (*this);
+    return (*this);
 }
 
 v4 &
 v4::operator/=(const f32 T)
 {
-	this->x /= T;
-	this->y /= T;
-	this->z /= T;
-	this->w /= T;
+    this->x /= T;
+    this->y /= T;
+    this->z /= T;
+    this->w /= T;
 
-	return (*this);
+    return (*this);
 }
 
 v4
 operator+(const v4 &U,
-	  	  const v4 &V)
+          const v4 &V)
 {
-	v4 Result;
+    v4 Result;
 
-	Result.x = U.x + V.x;
-	Result.y = U.y + V.y;
-	Result.z = U.z + V.z;
-	Result.w = U.w + V.w;
+    Result.x = U.x + V.x;
+    Result.y = U.y + V.y;
+    Result.z = U.z + V.z;
+    Result.w = U.w + V.w;
 
-	return (Result);
+    return (Result);
 }
 
 v4
 operator-(const v4 &U,
-		  const v4 &V)
+          const v4 &V)
 {
-	v4 Result;
+    v4 Result;
 
-	Result.x = U.x - V.x;
-	Result.y = U.y - V.y;
-	Result.z = U.z - V.z;
-	Result.w = U.w - V.w;
+    Result.x = U.x - V.x;
+    Result.y = U.y - V.y;
+    Result.z = U.z - V.z;
+    Result.w = U.w - V.w;
 
-	return (Result);
+    return (Result);
 }
 
 v4
 operator*(const f32 T,
-		  const v4 &V)
+          const v4 &V)
 {
-	v4 Result;
+    v4 Result;
 
-	Result.x = T * V.x;
-	Result.y = T * V.y;
-	Result.z = T * V.z;
-	Result.w = T * V.w;
+    Result.x = T * V.x;
+    Result.y = T * V.y;
+    Result.z = T * V.z;
+    Result.w = T * V.w;
 
-	return Result;
+    return Result;
 }
 
 v4
 operator/(const v4 &V,
-		  const f32 T)
+          const f32 T)
 {
-	v4 Result;
+    v4 Result;
 
-	Result.x = V.x / T;
-	Result.y = V.y / T;
-	Result.z = V.z / T;
-	Result.w = V.w / T;
+    Result.x = V.x / T;
+    Result.y = V.y / T;
+    Result.z = V.z / T;
+    Result.w = V.w / T;
 
-	return Result;
+    return Result;
 }
 
 f32
 Dot(const v4 &U,
-	const v4 &V)
+    const v4 &V)
 {
-	return (U.x * V.x) + (U.y * V.y) + (U.z * V.z) + (U.w * V.w);
+    return (U.x * V.x) + (U.y * V.y) + (U.z * V.z) + (U.w * V.w);
 }
 
 f32
 Length(const v4 &V)
 {
-	return SquareRoot(Dot(V, V));
+    return SquareRoot(Dot(V, V));
 }
 
 f32
 LengthSquared(const v4 &V)
 {
-	return Dot(V, V);
+    return Dot(V, V);
 }
 
 v4
 Normalize(const v4 &V)
 {
-	return V / Length(V);
+    return V / Length(V);
 }
 
 
-v4 		
+v4      
 Hadamard(const v4 &U, 
-		 const v4 &V)
+         const v4 &V)
 {
-	v4 Result;
+    v4 Result;
 
-	Result.x = U.x * V.x;
-	Result.y = U.y * V.y;
-	Result.z = U.z * V.z;
-	Result.w = U.w * V.w;
+    Result.x = U.x * V.x;
+    Result.y = U.y * V.y;
+    Result.z = U.z * V.z;
+    Result.w = U.w * V.w;
 
-	return (Result);
+    return (Result);
 }
 
 #endif // MG_IMPL
@@ -1167,12 +1167,12 @@ Hadamard(const v4 &U,
 
 union m4
 {
-	struct { v4 Cols[4]; };
-	f32 Elements[16];
+    struct { v4 Cols[4]; };
+    f32 Elements[16];
 
 
-	m4(void);
-	m4(v4 Col0, v4 Col1, v4 Col2, v4 Col3);
+    m4(void);
+    m4(v4 Col0, v4 Col1, v4 Col2, v4 Col3);
 };
 
 m4      Mat4Identity(void);
@@ -1187,30 +1187,30 @@ m4      Mat4LookAtLH(v3 Eye, v3 Center, v3 Up);
 m4      Mat4Scale(f32 Scale);
 m4      Mat4Scale(v3 &Scale);
 m4      operator*(m4 M1, m4 M2);
-v4 		operator*(m4 M, v4 V);
+v4      operator*(m4 M, v4 V);
 
 #ifdef MG_IMPL
 
 m4::m4(void)
 {
-	for (u32 I = 0; I < 16; I += 4)
-	{
-		this->Elements[I] = 0;
-		this->Elements[I + 1] = 0;
-		this->Elements[I + 2] = 0;
-		this->Elements[I + 3] = 0;
-	}
+    for (u32 I = 0; I < 16; I += 4)
+    {
+        this->Elements[I] = 0;
+        this->Elements[I + 1] = 0;
+        this->Elements[I + 2] = 0;
+        this->Elements[I + 3] = 0;
+    }
 }
 
 m4::m4(v4 Col0,
-	   v4 Col1,
-	   v4 Col2,
-	   v4 Col3)
+       v4 Col1,
+       v4 Col2,
+       v4 Col3)
 {
-	this->Cols[0] = Col0;
-	this->Cols[1] = Col1;
-	this->Cols[2] = Col2;
-	this->Cols[3] = Col3;
+    this->Cols[0] = Col0;
+    this->Cols[1] = Col1;
+    this->Cols[2] = Col2;
+    this->Cols[3] = Col3;
 }
 
 m4
@@ -1295,7 +1295,7 @@ Mat4Rotate(f32 Angle,
            v3 Axis)
 {
     m4      Mat;
-    f32		C,
+    f32     C,
             S,
             C1;
     v3      Vec;
@@ -1330,7 +1330,7 @@ Mat4PerspectiveRH(f32 FOV,
                   f32 Far)
 {
     m4      Mat;
-    f32		t,
+    f32     t,
             Delta;
 
 
@@ -1352,9 +1352,9 @@ Mat4PerspectiveLH(f32 FOV,
                   f32 Near,
                   f32 Far)
 {
-	m4 		Mat;
-	f32 	t;
-	f32 	Range;
+    m4      Mat;
+    f32     t;
+    f32     Range;
 
 
     t = Tan(DegsToRads(FOV) * 0.5f);
@@ -1473,7 +1473,7 @@ m4
 operator*(m4 M1,
           m4 M2)
 {
-	m4 Mat;
+    m4 Mat;
 
     for (u32 Y = 0; Y < 4; Y++)
     {
@@ -1493,18 +1493,18 @@ operator*(m4 M1,
     return (Mat);
 }
 
-v4 		
+v4      
 operator*(m4 M,
-		  v4 V)
+          v4 V)
 {
-	v4 Result;
+    v4 Result;
 
-	Result = V.x * M.Cols[0] +
-			 V.y * M.Cols[1] +
-			 V.z * M.Cols[2] +
-			 V.w * M.Cols[3];
+    Result = V.x * M.Cols[0] +
+             V.y * M.Cols[1] +
+             V.z * M.Cols[2] +
+             V.w * M.Cols[3];
 
-	return Result;
+    return Result;
 }
 
 #endif // MG_IMPL
@@ -1679,6 +1679,13 @@ typedef ULONG_PTR               SIZE_T, *PSIZE_T, DWORD_PTR, *PDWORD_PTR;
 
 typedef WORD                    ATOM;
 typedef DWORD                   COLORREF, *LPCOLORREF;
+
+#define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xff))) << 8))
+#define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
+#define LOWORD(l)           ((WORD)(((DWORD_PTR)(l)) & 0xffff))
+#define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xffff))
+#define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))
+#define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
 
 typedef INT_PTR (WINAPI *FARPROC)();
 typedef INT_PTR (WINAPI *NEARPROC)();
@@ -1995,6 +2002,13 @@ WINBASEAPI SIZE_T WINAPI    HeapSize(HANDLE hHeap, DWORD dwFlags, LPCVOID lpMem)
 #define PM_REMOVE           0x0001
 #define PM_NOYIELD          0x0002
 
+#define GWLP_WNDPROC        (-4)
+#define GWLP_HINSTANCE      (-6)
+#define GWLP_HWNDPARENT     (-8)
+#define GWLP_USERDATA       (-21)
+#define GWLP_ID             (-12)
+
+
 typedef LRESULT (CALLBACK *WNDPROC)(HWND, UINT, WPARAM, LPARAM);
 
 typedef struct tagPOINT
@@ -2099,8 +2113,13 @@ WINUSERAPI BOOL WINAPI      AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL 
 WINUSERAPI BOOL WINAPI      AdjustWindowRectEx(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle);
 WINUSERAPI int WINAPI       MessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
 WINUSERAPI int WINAPI       MessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType);
-WINUSERAPI BOOL WINAPI		SetWindowTextA(HWND hWnd, LPCSTR lpString);
-WINUSERAPI BOOL WINAPI		SetWindowTextW(HWND hWnd, LPCWSTR lpString);
+WINUSERAPI BOOL WINAPI      SetWindowTextA(HWND hWnd, LPCSTR lpString);
+WINUSERAPI BOOL WINAPI      SetWindowTextW(HWND hWnd, LPCWSTR lpString);
+WINUSERAPI LONG_PTR WINAPI  SetWindowLongPtrA(HWND hWnd, int nIndex, LONG_PTR dwNewLong);
+WINUSERAPI LONG_PTR WINAPI  SetWindowLongPtrW(HWND hWnd, int nIndex, LONG_PTR dwNewLong);
+WINUSERAPI LONG_PTR WINAPI	GetWindowLongPtrA(HWND hWnd, int nIndex);
+WINUSERAPI LONG_PTR WINAPI	GetWindowLongPtrW(HWND hWnd, int nIndex);
+
 // Message
 WINUSERAPI BOOL WINAPI      PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
 WINUSERAPI BOOL WINAPI      PeekMessageW(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
@@ -2116,7 +2135,7 @@ WINUSERAPI BOOL WINAPI      PostMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPA
 WINUSERAPI BOOL WINAPI      PostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 // DC / Paint
 
-WINUSERAPI HDC WINAPI 		GetDC(HWND hWnd);
+WINUSERAPI HDC WINAPI       GetDC(HWND hWnd);
 WINUSERAPI HDC WINAPI       GetWindowDC(HWND hWnd);
 WINUSERAPI int WINAPI       ReleaseDC(HWND hWnd, HDC hDC);
 WINUSERAPI HDC WINAPI       BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
@@ -2140,7 +2159,9 @@ WINUSERAPI BOOL WINAPI      EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
     #define GetMessage          GetMessageExW
     #define DefWindowProc       DefWindowProcW
     #define PostMessage         PostMessageW
-	#define SetWindowText		SetWindowTextW
+    #define SetWindowText       SetWindowTextW
+    #define SetWindowLongPtr    SetWindowLongPtrW
+    #define GetWindowLongPtr    GetWindowLongPtrW
 #else
     typedef WNDCLASSA           WNDCLASS;
     typedef PWNDCLASSA          PWNDCLASS;
@@ -2159,7 +2180,9 @@ WINUSERAPI BOOL WINAPI      EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
     #define GetMessage          GetMessageExA
     #define DefWindowProc       DefWindowProcA
     #define PostMessage         PostMessageA
-	#define SetWindowText		SetWindowTextA
+    #define SetWindowText       SetWindowTextA
+    #define SetWindowLongPtr    SetWindowLongPtrA
+    #define GetWindowLongPtr    GetWindowLongPtrA
 #endif // UNICODE
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2488,19 +2511,19 @@ WINBASEAPI VOID WINAPI      SetLastError(DWORD dwErrCode);
 // processenv.h
 //////////////////////////////////////////////////////////////////////////////
 
-WINBASEAPI LPSTR WINAPI			GetCommandLineA(VOID);
-WINBASEAPI LPWSTR WINAPI		GetCommandLineW(VOID);
-WINBASEAPI DWORD WINAPI			GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer);
-WINBASEAPI DWORD WINAPI			GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer);
-WINBASEAPI HANDLE WINAPI 		GetStdHandle(DWORD nStdHandle);
-WINBASEAPI BOOL WINAPI 			SetStdHandle(DWORD nStdHandle, HANDLE hHandle);
+WINBASEAPI LPSTR WINAPI         GetCommandLineA(VOID);
+WINBASEAPI LPWSTR WINAPI        GetCommandLineW(VOID);
+WINBASEAPI DWORD WINAPI         GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer);
+WINBASEAPI DWORD WINAPI         GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer);
+WINBASEAPI HANDLE WINAPI        GetStdHandle(DWORD nStdHandle);
+WINBASEAPI BOOL WINAPI          SetStdHandle(DWORD nStdHandle, HANDLE hHandle);
 
 #ifdef UNICODE
-#define GetCommandLine  	GetCommandLineW
-#define GetCurrentDirectory	GetCurrentDirectoryW
+#define GetCommandLine      GetCommandLineW
+#define GetCurrentDirectory GetCurrentDirectoryW
 #else
-#define GetCommandLine  	GetCommandLineA
-#define GetCurrentDirectory	GetCurrentDirectoryA
+#define GetCommandLine      GetCommandLineA
+#define GetCurrentDirectory GetCurrentDirectoryA
 #endif // UNICODE
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2627,7 +2650,7 @@ OutputDebugStringW(
 #endif // __cplusplus
 
 #else
-	#include <windows.h>
+    #include <windows.h>
 #endif
 
 
@@ -2641,117 +2664,117 @@ OutputDebugStringW(
 template <typename type>
 struct array
 {
-	type		*Data;
-	u32 		Size,
-				Capacity;
+    type        *Data;
+    u32         Size,
+                Capacity;
 
 
-	array(void);
-	array(u32 InitialCapacity);
-	~array(void);
+    array(void);
+    array(u32 InitialCapacity);
+    ~array(void);
 
 
-	b32		NeedGrow(u32 Amount);
-	u32 	Len(void);
-	u32 	ByteSize(void);
-	void 	Resize(u32 Amount);
-	void 	Push(type Value);
-	void 	Clear(void);
-	type 	&operator[](u32 Index);
+    b32     NeedGrow(u32 Amount);
+    u32     Len(void);
+    u32     ByteSize(void);
+    void    Resize(u32 Amount);
+    void    Push(type Value);
+    void    Clear(void);
+    type    &operator[](u32 Index);
 };
 
 template <typename type>
 array<type>::array(void)
 {
-	this->Capacity = 1;
-	this->Size = 0;
-	this->Data = (type *)HeapAlloc(GetProcessHeap(), 0, sizeof(type));
+    this->Capacity = 1;
+    this->Size = 0;
+    this->Data = (type *)HeapAlloc(GetProcessHeap(), 0, sizeof(type));
 }
 
 template <typename type>
 array<type>::array(u32 InitialCapacity)
 {
-	this->Capacity = InitialCapcity;
-	this->Size = 0;
-	this->Data = (type *)HeapAlloc(GetProcessHeap(), 0, InitialCapacity * sizeof(type));
+    this->Capacity = InitialCapcity;
+    this->Size = 0;
+    this->Data = (type *)HeapAlloc(GetProcessHeap(), 0, InitialCapacity * sizeof(type));
 }
 
 template <typename type>
 array<type>::~array(void)
 {
-	HeapFree(GetProcessHeap(), 0, this->Data);
+    HeapFree(GetProcessHeap(), 0, this->Data);
 }
 
 template <typename type>
 b32
 array<type>::NeedGrow(u32 Amount)
 {
-	return ((this->Data == NULL) || (this->Size + Amount > this->Capacity));
+    return ((this->Data == NULL) || (this->Size + Amount > this->Capacity));
 }
 
 template <typename type>
 u32
 array<type>::Len(void)
 {
-	return (this->Size);
+    return (this->Size);
 }
 
 template <typename type>
 u32
 array<type>::ByteSize(void)
 {
-	return (this->Size * sizeof(type));
+    return (this->Size * sizeof(type));
 }
 
 template <typename type>
-void 	
+void    
 array<type>::Resize(u32 Amount)
 {
-	u32		Cap;
+    u32     Cap;
 
-	if (this->Data)
-	{
-		Cap = Amount;
-	}
-	else
-	{
-		Cap = 0;
-	}
+    if (this->Data)
+    {
+        Cap = Amount;
+    }
+    else
+    {
+        Cap = 0;
+    }
 
-	this->Data = (type *)HeapReAlloc(GetProcessHeap(), 0, this->Data, Cap * sizeof(type));
-	if (!this->Data)
-	{
-		this->Size = 0;
-	}
+    this->Data = (type *)HeapReAlloc(GetProcessHeap(), 0, this->Data, Cap * sizeof(type));
+    if (!this->Data)
+    {
+        this->Size = 0;
+    }
 
-	this->Capacity = Cap;
+    this->Capacity = Cap;
 }
 
 template <typename type>
-void 	
+void    
 array<type>::Push(type Value)
 {
-	if (!(this->Data) || ((this->Data) && (this->NeedGrow(1))))
-	{
-		this->Resize(this->Capacity * 2);
-	}
+    if (!(this->Data) || ((this->Data) && (this->NeedGrow(1))))
+    {
+        this->Resize(this->Capacity * 2);
+    }
 
-	this->Data[this->Size] = Value;
-	this->Size += 1;
+    this->Data[this->Size] = Value;
+    this->Size += 1;
 }
 
 template <typename type>
-void 	
+void    
 array<type>::Clear(void)
 {
-	this->Size = 0;
+    this->Size = 0;
 }
 
 template <typename type>
 type &
 array<type>::operator[](u32 Index)
 {
-	return (this->Data[Index]);
+    return (this->Data[Index]);
 }
 
 
@@ -2764,84 +2787,84 @@ array<type>::operator[](u32 Index)
 
 struct arena
 {
-	u8			*Memory;
-	u32 		Pos;
-	u32			MemorySize;
-	HANDLE		Heap;
+    u8          *Memory;
+    u32         Pos;
+    u32         MemorySize;
+    HANDLE      Heap;
 };
 
 struct arena_frame
 {
-	arena		*Arena;
-	u32 		CurrentPos;
+    arena       *Arena;
+    u32         CurrentPos;
 };
 
-b32				CreateArena(arena *Arena, u32 Size);
-b32 			DestroyArena(arena *Arena);
-void 			*ArenaAlloc(arena *Arena, u32 Size);
-arena_frame		ArenaPushFrame(arena *Arena);
-void 			ArenaPopFrame(arena_frame Frame);
+b32             CreateArena(arena *Arena, u32 Size);
+b32             DestroyArena(arena *Arena);
+void            *ArenaAlloc(arena *Arena, u32 Size);
+arena_frame     ArenaPushFrame(arena *Arena);
+void            ArenaPopFrame(arena_frame Frame);
 
 #ifdef MG_IMPL
 
 b32
 CreateArena(arena *Arena,
-			u32 Size)
+            u32 Size)
 {
-	Arena->Heap = GetProcessHeap();
+    Arena->Heap = GetProcessHeap();
 
-	Arena->Memory = (u8 *)HeapAlloc(Arena->Heap, 0, Size);
-	Arena->MemorySize = Size;
-	Arena->Pos = 0;
+    Arena->Memory = (u8 *)HeapAlloc(Arena->Heap, 0, Size);
+    Arena->MemorySize = Size;
+    Arena->Pos = 0;
 
-	return (TRUE);
+    return (TRUE);
 }
 
 b32
 DestroyArena(arena *Arena)
 {
-	HeapFree(Arena->Heap, 0, Arena->Memory);
+    HeapFree(Arena->Heap, 0, Arena->Memory);
 
-	Arena->Pos = 0;
-	Arena->MemorySize = 0;
-	Arena->Memory = NULL;
-	Arena->Heap = 0;
+    Arena->Pos = 0;
+    Arena->MemorySize = 0;
+    Arena->Memory = NULL;
+    Arena->Heap = 0;
 
-	return (TRUE);
+    return (TRUE);
 }
 
 void *
 ArenaAlloc(arena *Arena,
-		   u32 Size)
+           u32 Size)
 {
-	void 		*Ptr = NULL;
-	u32 		AlignedSize = ((Size + 15) & (~15));
+    void        *Ptr = NULL;
+    u32         AlignedSize = ((Size + 15) & (~15));
 
 
-	if (Arena->Pos + AlignedSize < Arena->MemorySize)
-	{
-		Ptr = Arena->Memory + Arena->Pos;
-		Arena->Pos += AlignedSize;
-	}
+    if (Arena->Pos + AlignedSize < Arena->MemorySize)
+    {
+        Ptr = Arena->Memory + Arena->Pos;
+        Arena->Pos += AlignedSize;
+    }
 
-	return (Ptr);
+    return (Ptr);
 }
 
 arena_frame
 ArenaPushFrame(arena *Arena)
 {
-	arena_frame		Frame;
+    arena_frame     Frame;
 
-	Frame.Arena = Arena;
-	Frame.CurrentPos = Arena->Pos;
+    Frame.Arena = Arena;
+    Frame.CurrentPos = Arena->Pos;
 
-	return Frame;
+    return Frame;
 }
 
 void
 ArenaPopFrame(arena_frame Frame)
 {
-	Frame.Arena->Pos = Frame.CurrentPos;
+    Frame.Arena->Pos = Frame.CurrentPos;
 }
 
 #endif MG_IMPL

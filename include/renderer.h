@@ -99,7 +99,7 @@ v4					FetchV4(f32 *Vertices, u32 VertexID);
 //**************************************
 
 s32_fp 				Orient2D(v2_fp A, v2_fp B, v2_fp C);
-v2					NdcToRaster(v2 Point);
+v2					NdcToRaster(v2 Point, s32 Width, s32 Height);
 b32  				FillRule(v2_fp Edge);
 void 				RasterizeTriangle(bitmap *Bitmap, triangle Triangle);
 void				PerspectiveDivide(v4 *V);

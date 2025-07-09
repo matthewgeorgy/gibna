@@ -24,6 +24,25 @@ AllocateBitmap(bitmap *Bitmap,
 	Bitmap->Info.bmiHeader.biCompression = BI_RGB;
 }
 
+void		
+ResizeBitmap(bitmap *Bitmap, 
+			 s32 NewWidth, 
+			 s32 NewHeight)
+{
+	u32		BitmapMemorySize = NewWidth * NewHeight * BYTES_PER_PIXEL;
+
+	HeapFree(GetProcessHeap(), 0, Bitmap->ColorBuffer);
+	HeapFree(GetProcessHeap(), 0, Bitmap->DepthBuffer);
+
+	Bitmap->ColorBuffer = (u8 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
+	Bitmap->DepthBuffer = (u32 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
+
+	Bitmap->Width = NewWidth;
+	Bitmap->Height = NewHeight;
+	Bitmap->Info.bmiHeader.biWidth = NewWidth;
+	Bitmap->Info.bmiHeader.biHeight = NewHeight; // NOTE(matthew): bottom->up bitmap
+}
+
 void
 PresentBitmap(bitmap Bitmap)
 {

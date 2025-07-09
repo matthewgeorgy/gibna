@@ -8,9 +8,9 @@ RasterizeTriangle(renderer_state *State,
 	s32				MinX, MaxX,
 					MinY, MaxY;
 
-	v2 RasterV0 = NdcToRaster(v2(Triangle.V0.Pos.x, Triangle.V0.Pos.y));
-	v2 RasterV1 = NdcToRaster(v2(Triangle.V1.Pos.x, Triangle.V1.Pos.y));
-	v2 RasterV2 = NdcToRaster(v2(Triangle.V2.Pos.x, Triangle.V2.Pos.y));
+	v2 RasterV0 = NdcToRaster(v2(Triangle.V0.Pos.x, Triangle.V0.Pos.y), State->Bitmap->Width, State->Bitmap->Height);
+	v2 RasterV1 = NdcToRaster(v2(Triangle.V1.Pos.x, Triangle.V1.Pos.y), State->Bitmap->Width, State->Bitmap->Height);
+	v2 RasterV2 = NdcToRaster(v2(Triangle.V2.Pos.x, Triangle.V2.Pos.y), State->Bitmap->Width, State->Bitmap->Height);
 
 	v2_fp V0 = v2_fp(RasterV0);
 	v2_fp V1 = v2_fp(RasterV1);
@@ -35,9 +35,9 @@ RasterizeTriangle(renderer_state *State,
 
 	// Screen clipping
 	MinX = Max(MinX, 0);
-	MaxX = Min(MaxX, SCR_WIDTH);
+	MaxX = Min(MaxX, State->Bitmap->Width);
 	MinY = Max(MinY, 0);
-	MaxY = Min(MaxY, SCR_HEIGHT);
+	MaxY = Min(MaxY, State->Bitmap->Height);
 
 	// Initial edge function values
 	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
@@ -146,13 +146,15 @@ Orient2D(v2_fp A,
 }
 
 v2
-NdcToRaster(v2 Point)
+NdcToRaster(v2 Point,
+			s32 Width,
+			s32 Height)
 {
 	v2		Pixel;
 
 
-	Pixel.x = (Point.x + 1.0f) * 0.5f * SCR_WIDTH;
-	Pixel.y = (Point.y + 1.0f) * 0.5f * SCR_HEIGHT;
+	Pixel.x = (Point.x + 1.0f) * 0.5f * Width;
+	Pixel.y = (Point.y + 1.0f) * 0.5f * Height;
 
 	return (Pixel);
 }

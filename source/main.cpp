@@ -13,6 +13,12 @@
    - "Shaders" / rendering API
 
    TODO(matthew):
+   - Debug layer / API validation
+   - Tidy up API in general
+   - Texture filtering & samplers
+   - Mip-mapping
+   - Shaders with lighting computation
+   - Tile-based multithreading
    - Improve mesh loading; more types of OBJs (and PLYs too???)
 */
 
@@ -20,6 +26,7 @@
 #include <stdio.h>
 
 #define MG_IMPL
+/* #define MG_USE_WINDOWS_H */
 #include <mg.h>
 #include <bitmap.h>
 #include <fixed_point.h>
@@ -91,6 +98,10 @@ main(void)
 
 	AllocateBitmap(&Bitmap, Window, SCR_WIDTH, SCR_HEIGHT);
 
+	SetWindowLongPtr(Window, GWLP_USERDATA, (LONG_PTR)&Bitmap);
+
+	printf("here\n");
+
 	///////////////////////////////////
 	// Vertices
 
@@ -152,8 +163,6 @@ main(void)
 	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
 
-	View = Mat4LookAtLH(Camera.Pos, Camera.Front, Camera.Up);
-	Proj = Mat4PerspectiveLH(45.0f, f32(SCR_WIDTH) / f32(SCR_HEIGHT), 0.1f, 1000.0f);
 
 	for (;;)
 	{
@@ -172,6 +181,9 @@ main(void)
 
 			LARGE_INTEGER Start, End;
 			QueryPerformanceCounter(&Start);
+
+			View = Mat4LookAtLH(Camera.Pos, Camera.Front, Camera.Up);
+			Proj = Mat4PerspectiveLH(45.0f, f32(Bitmap.Width) / f32(Bitmap.Height), 0.1f, 1000.0f);
 
 			// Sphere render
 			State.VertexBuffer = SphereVB;
@@ -243,6 +255,24 @@ WndProc(HWND hWnd,
 		case WM_DESTROY:
 		{
 			PostQuitMessage(0);
+		} break;
+
+		case WM_SIZE:
+		{
+			LONG_PTR UserData = GetWindowLongPtr(hWnd, GWLP_USERDATA);
+
+			if (UserData)
+			{
+				printf("there\n");
+				u32 NewWidth = LOWORD(lParam);
+				u32 NewHeight = HIWORD(lParam);
+
+				bitmap *Bitmap = (bitmap *)UserData;
+
+				ResizeBitmap(Bitmap, NewWidth, NewHeight);
+
+				printf("%u %u\n", NewWidth, NewHeight);
+			}
 		} break;
 
 		default:
