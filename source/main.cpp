@@ -107,14 +107,33 @@ main(void)
 	array<u32>		SphereIndices;
 	mesh			CubeMesh;
 	buffer			SphereVB, SphereIB,
+					TetraVB, TetraIB,
 					CubeVB;
+	f32 			TetraVertices[] =
+    {
+        -0.5f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+        0.5f, 0.0f, 0.0f,    0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.707f,  0.0f, 0.0f, 1.0f,
 
+        0.0f, 0.66f, 0.33f,  1.0f, 1.0f, 0.0f
+        
+    };
+    u32 			TetraIndices[] =
+    {
+		0, 1, 2, // Base
+		3, 1, 0, // Face 1
+		3, 2, 1, // Face 2
+		3, 0, 2, // Face 3
+    };
 
 	GenerateSphere(&SphereVertices, &SphereIndices);
 	LoadMesh(&CubeMesh, "assets/cube.obj");
 
 	CreateBuffer(&SphereVB, SphereVertices.Data, SphereVertices.ByteSize());
 	CreateBuffer(&SphereIB, SphereIndices.Data, SphereIndices.ByteSize());
+
+	CreateBuffer(&TetraVB, TetraVertices, sizeof(TetraVertices));
+	CreateBuffer(&TetraIB, TetraIndices, sizeof(TetraIndices));
 
 	CreateBuffer(&CubeVB, CubeMesh.Vertices.Data, CubeMesh.Vertices.ByteSize());
 
@@ -201,6 +220,16 @@ main(void)
 			World = Mat4Scale(0.5f) * Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 5.0f);
 			State.WVP = Proj * View * World;
 			Draw(&State, CubeMesh.Vertices.Len() / 2);
+			
+			// Tetra render
+			State.VertexBuffer = TetraVB;
+			State.IndexBuffer = TetraIB;
+			State.VS = CubeVS;
+			State.PS = CubePS;
+
+			World = Mat4Scale(1.5f) * Mat4Rotate(2 * Angle, v3(1, 1, 0)) * Mat4Translate(0, 0, 1.0f);
+			State.WVP = Proj * View * World;
+			DrawIndexed(&State, _countof(TetraIndices));
 
 			PresentBitmap(Bitmap);
 			Angle += 0.1f;
@@ -399,6 +428,8 @@ wide_v3
 CubePS(renderer_state *State,
 	   vertex_attribs Attribs)
 {
+	State;
+
 	wide_v3		Output;
 
 	Output = Attribs.Colors;
