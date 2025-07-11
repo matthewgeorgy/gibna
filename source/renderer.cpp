@@ -64,7 +64,7 @@ RasterizeTriangle(renderer_state *State,
 				wide_f32 L0 = WideF32FromS32(W0) * Triangle.V0.Pos.w;
 				wide_f32 L1 = WideF32FromS32(W1) * Triangle.V1.Pos.w;
 				wide_f32 L2 = WideF32FromS32(W2) * Triangle.V2.Pos.w;
-				wide_f32 InvSum = wide_f32(1) / (L0 + L1 + L2);
+				wide_f32 InvSum = Reciprocal(L0 + L1 + L2);
 
 				weights Weights;
 

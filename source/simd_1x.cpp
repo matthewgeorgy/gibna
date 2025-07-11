@@ -5,10 +5,8 @@ ConditionalAssign(s32 *Dest,
 				  s32 Mask,
 				  s32 Source)
 {
-	if (Mask == 0)
-	{
-		*Dest = Source;
-	}
+	Mask = (Mask ? 0xFFFFFFFF : 0);
+	*Dest = ((Mask & *Dest) | (~Mask & Source));
 }
 
 s32
@@ -51,5 +49,11 @@ b32
 AnyTrue(s32 Comparison)
 {
 	return (Comparison);
+}
+
+f32			
+Reciprocal(f32 A)
+{
+	return (1.0f / A);
 }
 

@@ -321,6 +321,16 @@ operator/(f32_8x A,
 	return (Result);
 }
 
+f32_8x
+Reciprocal(f32_8x A)
+{
+	f32_8x		Result;
+
+	Result.V = _mm256_rcp_ps(A.V);
+
+	return (Result);
+}
+
 // Bitwise
 f32_8x		
 operator&(s32_8x Mask,

@@ -329,6 +329,16 @@ operator/(f32_4x A,
 	return (Result);
 }
 
+f32_4x		
+Reciprocal(f32_4x A)
+{
+	f32_4x		Result;
+
+	Result.V = _mm_rcp_ps(A.V);
+
+	return (Result);
+}
+
 // Bitwise
 f32_4x		
 operator&(s32_4x Mask, 
