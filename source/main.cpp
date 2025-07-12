@@ -37,11 +37,19 @@
 LRESULT CALLBACK	WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 void				GenerateSphere(array<f32> *Vertices, array<u32> *Indices);
 
+#define SPHERE_VB_SLOT	0
+#define CUBE_VB_SLOT	1
+#define TETRA_VB_SLOT	2
+#define TEXTURE_SLOT	0
+
 vertex				SphereVS(renderer_state *State, u32 VertexID);
 wide_v3				SpherePS(renderer_state *State, vertex_attribs Attribs);
 
 vertex				CubeVS(renderer_state *State, u32 VertexID);
 wide_v3				CubePS(renderer_state *State, vertex_attribs Attribs);
+
+vertex				TetraVS(renderer_state *State, u32 VertexID);
+wide_v3				TetraPS(renderer_state *State, vertex_attribs Attribs);
 
 int
 main(void)
@@ -174,12 +182,15 @@ main(void)
 
 
 	State.Bitmap = &Bitmap;
-	State.Texture = Texture;
+
+	BindTexture(&State, Texture, TEXTURE_SLOT);
+	BindVertexBuffer(&State, SphereVB, SPHERE_VB_SLOT);
+	BindVertexBuffer(&State, CubeVB, CUBE_VB_SLOT);
+	BindVertexBuffer(&State, TetraVB, TETRA_VB_SLOT);
 
 	Camera.Pos = v3(0, 2, -6);
 	Camera.Front = v3(0, 0, 0);
 	Camera.Up = v3(0, 1, 0);
-
 
 	for (;;)
 	{
@@ -203,32 +214,29 @@ main(void)
 			Proj = Mat4PerspectiveLH(45.0f, f32(Bitmap.Width) / f32(Bitmap.Height), 0.1f, 1000.0f);
 
 			// Sphere render
-			State.VertexBuffer = SphereVB;
-			State.IndexBuffer = SphereIB;
-			State.VS = SphereVS;
-			State.PS = SpherePS;
-
 			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Rotate(-90, v3(1, 0, 0));
 			State.WVP = Proj * View * World;
+
+			BindIndexBuffer(&State, SphereIB);
+			SetVertexShader(&State, SphereVS);
+			SetPixelShader(&State, SpherePS);
 			DrawIndexed(&State, SphereIndices.Len());
 
 			// Cube render
-			State.VertexBuffer = CubeVB;
-			State.VS = CubeVS;
-			State.PS = CubePS;
-
 			World = Mat4Scale(0.5f) * Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 5.0f);
 			State.WVP = Proj * View * World;
+
+			SetVertexShader(&State, CubeVS);
+			SetPixelShader(&State, CubePS);
 			Draw(&State, CubeMesh.Vertices.Len() / 2);
 			
 			// Tetra render
-			State.VertexBuffer = TetraVB;
-			State.IndexBuffer = TetraIB;
-			State.VS = CubeVS;
-			State.PS = CubePS;
-
 			World = Mat4Scale(1.5f) * Mat4Rotate(2 * Angle, v3(1, 1, 0)) * Mat4Translate(0, 0, 1.0f);
 			State.WVP = Proj * View * World;
+
+			BindIndexBuffer(&State, TetraIB);
+			SetVertexShader(&State, TetraVS);
+			SetPixelShader(&State, TetraPS);
 			DrawIndexed(&State, _countof(TetraIndices));
 
 			PresentBitmap(Bitmap);
@@ -378,7 +386,7 @@ SphereVS(renderer_state *State,
 		 u32 VertexID)
 {
 	vertex		Output;
-	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
+	f32			*Vertices = (f32 *)State->VertexBuffers[SPHERE_VB_SLOT].Data;
 	m4			WVP = State->WVP;
 	u32			Stride = 5;
 
@@ -399,7 +407,7 @@ SpherePS(renderer_state *State,
 {
 	wide_v3		Output;
 
-	Output = SampleTexture(State->Texture, Attribs.TexCoords);
+	Output = SampleTexture(State->Textures[TEXTURE_SLOT], Attribs.TexCoords);
 
 	return (Output);
 }
@@ -409,7 +417,7 @@ CubeVS(renderer_state *State,
 	   u32 VertexID)
 {
 	vertex		Output;
-	f32			*Vertices = (f32 *)State->VertexBuffer.Data;
+	f32			*Vertices = (f32 *)State->VertexBuffers[CUBE_VB_SLOT].Data;
 	m4			WVP = State->WVP;
 	u32			Stride = 6;
 
@@ -426,6 +434,39 @@ CubeVS(renderer_state *State,
 
 wide_v3
 CubePS(renderer_state *State,
+	   vertex_attribs Attribs)
+{
+	State;
+
+	wide_v3		Output;
+
+	Output = Attribs.Colors;
+
+	return (Output);
+}
+
+vertex
+TetraVS(renderer_state *State,
+	   u32 VertexID)
+{
+	vertex		Output;
+	f32			*Vertices = (f32 *)State->VertexBuffers[TETRA_VB_SLOT].Data;
+	m4			WVP = State->WVP;
+	u32			Stride = 6;
+
+	VertexID *= Stride;
+	
+	v3 Pos = FetchV3(Vertices, VertexID);
+	v3 Color = FetchV3(Vertices, VertexID + 3);
+
+	Output.Pos = WVP * v4(Pos.x, Pos.y, Pos.z, 1.0f);
+	Output.Color = Color;
+
+	return (Output);
+}
+
+wide_v3
+TetraPS(renderer_state *State,
 	   vertex_attribs Attribs)
 {
 	State;

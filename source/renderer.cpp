@@ -712,3 +712,40 @@ FetchV4(f32 *Vertices,
 	return (Result);
 }
 
+void				
+BindVertexBuffer(renderer_state *State,
+				 buffer Buffer,
+				 u32 Slot)
+{
+	State->VertexBuffers[Slot] = Buffer;
+}
+
+void				
+BindIndexBuffer(renderer_state *State,
+				buffer Buffer)
+{
+	State->IndexBuffer = Buffer;
+}
+
+void				
+BindTexture(renderer_state *State,
+			texture Texture,
+			u32 Slot)
+{
+	State->Textures[Slot] = Texture;
+}
+
+void				
+SetVertexShader(renderer_state *State,
+				vs_proc VS)
+{
+	State->VS = VS;
+}
+
+void				
+SetPixelShader(renderer_state *State,
+			   ps_proc PS)
+{
+	State->PS = PS;
+}
+

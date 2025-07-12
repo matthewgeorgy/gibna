@@ -59,9 +59,9 @@ typedef wide_v3 (*ps_proc)(renderer_state *, vertex_attribs);
 
 struct renderer_state
 {
-	buffer		VertexBuffer,
+	buffer		VertexBuffers[16],
 				IndexBuffer;
-	texture		Texture;
+	texture		Textures[16];
 	m4			WVP;
 	bitmap 		*Bitmap;
 	vs_proc		VS;
@@ -93,6 +93,11 @@ wide_v3				SampleTexture(texture Texture, wide_v2 TexCoords);
 v2					FetchV2(f32 *Vertices, u32 VertexID);
 v3					FetchV3(f32 *Vertices, u32 VertexID);
 v4					FetchV4(f32 *Vertices, u32 VertexID);
+void				BindVertexBuffer(renderer_state *State, buffer Buffer, u32 Slot);
+void				BindIndexBuffer(renderer_state *State, buffer Buffer);
+void				BindTexture(renderer_state *State, texture Texture, u32 Slot);
+void				SetVertexShader(renderer_state *State, vs_proc VS);
+void				SetPixelShader(renderer_state *State, ps_proc PS);
 
 //**************************************
 //*** "Internal" ***********************
