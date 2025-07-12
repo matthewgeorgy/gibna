@@ -749,3 +749,10 @@ SetPixelShader(renderer_state *State,
 	State->PS = PS;
 }
 
+void
+BindConstantBuffer(renderer_state *State,
+				   void *Data)
+{
+	State->ConstantBuffer = Data;
+}
+

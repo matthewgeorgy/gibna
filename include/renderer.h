@@ -62,10 +62,11 @@ struct renderer_state
 	buffer		VertexBuffers[16],
 				IndexBuffer;
 	texture		Textures[16];
-	m4			WVP;
-	bitmap 		*Bitmap;
+	void		*ConstantBuffer;
 	vs_proc		VS;
 	ps_proc		PS;
+
+	bitmap 		*Bitmap;
 };
 
 struct edge
@@ -96,6 +97,7 @@ v4					FetchV4(f32 *Vertices, u32 VertexID);
 void				BindVertexBuffer(renderer_state *State, buffer Buffer, u32 Slot);
 void				BindIndexBuffer(renderer_state *State, buffer Buffer);
 void				BindTexture(renderer_state *State, texture Texture, u32 Slot);
+void				BindConstantBuffer(renderer_state *State, void *Data);
 void				SetVertexShader(renderer_state *State, vs_proc VS);
 void				SetPixelShader(renderer_state *State, ps_proc PS);
 

@@ -10,11 +10,10 @@
    - Depth buffering
    - Clipping
    - Textures
-   - "Shaders" / rendering API
+   - State-based rendering API + custom programmable "shader" functions
 
    TODO(matthew):
    - Debug layer / API validation
-   - Tidy up API in general
    - Texture filtering & samplers
    - Mip-mapping
    - Shaders with lighting computation
@@ -178,7 +177,8 @@ main(void)
 	camera				Camera;
 	m4 					World,
 						View,
-						Proj;
+						Proj,
+						WVP;
 
 
 	State.Bitmap = &Bitmap;
@@ -215,7 +215,8 @@ main(void)
 
 			// Sphere render
 			World = Mat4Rotate(Angle, v3(0, 1, 0)) * Mat4Rotate(-90, v3(1, 0, 0));
-			State.WVP = Proj * View * World;
+			WVP = Proj * View * World;
+			BindConstantBuffer(&State, &WVP);
 
 			BindIndexBuffer(&State, SphereIB);
 			SetVertexShader(&State, SphereVS);
@@ -224,7 +225,8 @@ main(void)
 
 			// Cube render
 			World = Mat4Scale(0.5f) * Mat4Rotate(-Angle, v3(0, 1, 0)) * Mat4Translate(0, 0, 5.0f);
-			State.WVP = Proj * View * World;
+			WVP = Proj * View * World;
+			BindConstantBuffer(&State, &WVP);
 
 			SetVertexShader(&State, CubeVS);
 			SetPixelShader(&State, CubePS);
@@ -232,7 +234,8 @@ main(void)
 			
 			// Tetra render
 			World = Mat4Scale(1.5f) * Mat4Rotate(2 * Angle, v3(1, 1, 0)) * Mat4Translate(0, 0, 1.0f);
-			State.WVP = Proj * View * World;
+			WVP = Proj * View * World;
+			BindConstantBuffer(&State, &WVP);
 
 			BindIndexBuffer(&State, TetraIB);
 			SetVertexShader(&State, TetraVS);
@@ -387,7 +390,7 @@ SphereVS(renderer_state *State,
 {
 	vertex		Output;
 	f32			*Vertices = (f32 *)State->VertexBuffers[SPHERE_VB_SLOT].Data;
-	m4			WVP = State->WVP;
+	m4			WVP = *(m4 *)State->ConstantBuffer;
 	u32			Stride = 5;
 
 	VertexID *= Stride;
@@ -418,7 +421,7 @@ CubeVS(renderer_state *State,
 {
 	vertex		Output;
 	f32			*Vertices = (f32 *)State->VertexBuffers[CUBE_VB_SLOT].Data;
-	m4			WVP = State->WVP;
+	m4			WVP = *(m4 *)State->ConstantBuffer;
 	u32			Stride = 6;
 
 	VertexID *= Stride;
@@ -451,7 +454,7 @@ TetraVS(renderer_state *State,
 {
 	vertex		Output;
 	f32			*Vertices = (f32 *)State->VertexBuffers[TETRA_VB_SLOT].Data;
-	m4			WVP = State->WVP;
+	m4			WVP = *(m4 *)State->ConstantBuffer;
 	u32			Stride = 6;
 
 	VertexID *= Stride;
