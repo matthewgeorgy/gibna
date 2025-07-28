@@ -228,8 +228,8 @@ RenderPixels(bitmap *Bitmap,
 	wide_s32 NewBlues  = NewColors.b;
 
 	wide_s32 PixelIndices = WIDE_S32_ZERO_TO_RANGE;
-	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
-	u8 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
+	s32 PixelCoord = X + Y * Bitmap->Width;
+	u32 *BasePixelPtr = &Bitmap->ColorBuffer[PixelCoord];
 
 	// NOTE(matthew): If any of the components of PixelXCoordinates exceeds the
 	// bitmap width, these will overwrite pixels in the next row, which we don't 

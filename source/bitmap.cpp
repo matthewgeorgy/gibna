@@ -1,20 +1,22 @@
 #include <bitmap.h>
 
+#define MAX_SCR_WIDTH	2048
+#define MAX_SCR_HEIGHT	2048
+
 void
 AllocateBitmap(bitmap *Bitmap,
 			   HWND Window,
 			   s32 Width,
 			   s32 Height)
 {
-	u32		BitmapMemorySize = Width * Height * BYTES_PER_PIXEL;
-
+	u32		BitmapMemorySize = MAX_SCR_WIDTH * MAX_SCR_HEIGHT * BYTES_PER_PIXEL;
 
 	Bitmap->Width = Width;
 	Bitmap->Height = Height;
 	Bitmap->Window = Window;
 	Bitmap->DC = GetDC(Window);
-	Bitmap->ColorBuffer = (u8 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
-	Bitmap->DepthBuffer = (u32 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
+	Bitmap->ColorBuffer = (u32 *)VirtualAlloc(NULL, BitmapMemorySize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	Bitmap->DepthBuffer = (u32 *)VirtualAlloc(NULL, BitmapMemorySize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
 	Bitmap->Info.bmiHeader.biSize = sizeof(Bitmap->Info.bmiHeader);
 	Bitmap->Info.bmiHeader.biWidth = Bitmap->Width;
@@ -29,14 +31,6 @@ ResizeBitmap(bitmap *Bitmap,
 			 s32 NewWidth, 
 			 s32 NewHeight)
 {
-	u32		BitmapMemorySize = NewWidth * NewHeight * BYTES_PER_PIXEL;
-
-	HeapFree(GetProcessHeap(), 0, Bitmap->ColorBuffer);
-	HeapFree(GetProcessHeap(), 0, Bitmap->DepthBuffer);
-
-	Bitmap->ColorBuffer = (u8 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
-	Bitmap->DepthBuffer = (u32 *)HeapAlloc(GetProcessHeap(), 0, BitmapMemorySize);
-
 	Bitmap->Width = NewWidth;
 	Bitmap->Height = NewHeight;
 	Bitmap->Info.bmiHeader.biWidth = NewWidth;
@@ -58,7 +52,7 @@ SetPixel(bitmap *Bitmap,
 		 s32 Y,
 		 color_u8 Color)
 {
-	s32 PixelCoord = (X + Y * Bitmap->Width) * BYTES_PER_PIXEL;
+	s32 PixelCoord = X + Y * Bitmap->Width;
 	u32 RGB = PackRGB(Color.r, Color.g, Color.b);
 
 	*(u32 *)(&Bitmap->ColorBuffer[PixelCoord]) = RGB;

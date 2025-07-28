@@ -8,7 +8,7 @@
 struct bitmap
 {
     BITMAPINFO  Info;
-    u8          *ColorBuffer;
+    u32         *ColorBuffer;
 	u32			*DepthBuffer;
     s32         Width,
                 Height;
