@@ -1,9 +1,9 @@
 #ifndef __SIMD_H__
 #define __SIMD_H__
 
+#if (SIMD_WIDTH==1)
+
 #include <simd_1x.h>
-#include <simd_4x.h>
-#include <simd_8x.h>
 
 struct weights_1x
 {
@@ -11,22 +11,6 @@ struct weights_1x
 			W1,
 			W2;
 };
-
-struct weights_4x
-{
-	f32_4x		W0,
-				W1,
-				W2;
-};
-
-struct weights_8x
-{
-	f32_8x		W0,
-				W1,
-				W2;
-};
-
-#if (SIMD_WIDTH==1)
 
 typedef s32			wide_s32;
 typedef f32			wide_f32;
@@ -39,6 +23,15 @@ typedef weights_1x	weights;
 
 #elif (SIMD_WIDTH==4)
 
+#include <simd_4x.h>
+
+struct weights_4x
+{
+	f32_4x		W0,
+				W1,
+				W2;
+};
+
 typedef s32_4x		wide_s32;
 typedef f32_4x		wide_f32;
 typedef v2_4x		wide_v2;
@@ -49,6 +42,15 @@ typedef weights_4x	weights;
 #define WIDE_S32_ZERO_TO_RANGE	wide_s32(0, 1, 2, 3)
 
 #elif (SIMD_WIDTH==8)
+
+#include <simd_8x.h>
+
+struct weights_8x
+{
+	f32_8x		W0,
+				W1,
+				W2;
+};
 
 typedef s32_8x		wide_s32;
 typedef f32_8x		wide_f32;
