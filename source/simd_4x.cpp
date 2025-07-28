@@ -558,7 +558,7 @@ LoadWideS32(void *Ptr)
 {
 	s32_4x		Result;
 
-	Result.V = _mm_load_si128((__m128i *)Ptr);
+	Result.V = _mm_loadu_si128((__m128i *)Ptr);
 
 	return (Result);
 }
@@ -567,6 +567,6 @@ void
 StoreWideS32(void *Ptr,
 			 s32_4x A)
 {
-	_mm_store_si128((__m128i *)Ptr, A.V);
+	_mm_storeu_si128((__m128i *)Ptr, A.V);
 }
 

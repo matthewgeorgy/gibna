@@ -152,7 +152,7 @@ s32_8x		WideS32FromF32(f32_8x A);
 f32_8x		WideF32FromS32(s32_8x A);
 
 // Memory
-// NOTE(matthew): These are ALIGNED loads/stores
+// NOTE(matthew): These are UNALIGNED loads/stores
 s32_8x		LoadWideS32(void *Ptr);
 void		StoreWideS32(void *Ptr, s32_8x A);
 

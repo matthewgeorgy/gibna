@@ -554,7 +554,7 @@ LoadWideS32(void *Ptr)
 {
 	s32_8x		Result;
 
-	Result.V = _mm256_load_si256((__m256i *)Ptr);
+	Result.V = _mm256_loadu_si256((__m256i *)Ptr);
 
 	return (Result);
 }
@@ -563,6 +563,6 @@ void
 StoreWideS32(void *Ptr,
 			 s32_8x A)
 {
-	_mm256_store_si256((__m256i *)Ptr, A.V);
+	_mm256_storeu_si256((__m256i *)Ptr, A.V);
 }
 
