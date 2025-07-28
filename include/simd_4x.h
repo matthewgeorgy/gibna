@@ -152,5 +152,10 @@ s32_4x 		GatherU8(void *BasePtr, u32 Stride, s32_4x Indices);
 s32_4x		WideS32FromF32(f32_4x A);
 f32_4x		WideF32FromS32(s32_4x A);
 
+// Memory
+// NOTE(matthew): These are ALIGNED loads/stores
+s32_4x		LoadWideS32(void *Ptr);
+void		StoreWideS32(void *Ptr, s32_4x A);
+
 #endif // __SIMD_4X_H__
 

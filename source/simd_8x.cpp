@@ -549,3 +549,20 @@ WideF32FromS32(s32_8x A)
 	return (Result);
 }
 
+s32_8x
+LoadWideS32(void *Ptr)
+{
+	s32_8x		Result;
+
+	Result.V = _mm256_load_si256((__m256i *)Ptr);
+
+	return (Result);
+}
+
+void
+StoreWideS32(void *Ptr,
+			 s32_8x A)
+{
+	_mm256_store_si256((__m256i *)Ptr, A.V);
+}
+
