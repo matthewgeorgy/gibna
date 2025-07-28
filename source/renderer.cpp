@@ -34,6 +34,9 @@ RasterizeTriangle(renderer_state *State,
 	MinY = Max(MinY, 0);
 	MaxY = Min(MaxY, State->Bitmap->Height);
 
+	// Round starting X down to SIMD width
+	MinX = (MinX / SIMD_WIDTH) * SIMD_WIDTH;
+
 	// Initial edge function values
 	v2_fp Pixel = v2_fp(f32(MinX) + 0.5f, f32(MinY) + 0.5f);
 	edge E01, E12, E20;
@@ -235,33 +238,12 @@ RenderPixels(bitmap *Bitmap,
 	wide_s32 MaxXMask = wide_s32(Bitmap->Width - 1);
 	ActivePixelMask = ActivePixelMask & (PixelXCoordinates <= MaxXMask);
 
-	wide_s32 OldReds   = GatherS32(BasePixelPtr + 2, BYTES_PER_PIXEL, PixelIndices);
-	wide_s32 OldGreens = GatherS32(BasePixelPtr + 1, BYTES_PER_PIXEL, PixelIndices);
-	wide_s32 OldBlues  = GatherS32(BasePixelPtr + 0, BYTES_PER_PIXEL, PixelIndices);
+	wide_s32 NewPixels = (NewReds << 16) | (NewGreens << 8) | (NewBlues);
+	wide_s32 OldPixels = LoadWideS32(BasePixelPtr);
 
-	ConditionalAssign(&NewReds, ActivePixelMask, OldReds);
-	ConditionalAssign(&NewGreens, ActivePixelMask, OldGreens);
-	ConditionalAssign(&NewBlues, ActivePixelMask, OldBlues);
+	ConditionalAssign(&NewPixels, ActivePixelMask, OldPixels);
 
-	alignas(4 * SIMD_WIDTH) static s32 R[SIMD_WIDTH];
-	alignas(4 * SIMD_WIDTH) static s32 G[SIMD_WIDTH];
-	alignas(4 * SIMD_WIDTH) static s32 B[SIMD_WIDTH];
-
-#if (SIMD_WIDTH==4)
-	_mm_store_si128((__m128i *)&R[0], NewReds.V);
-	_mm_store_si128((__m128i *)&G[0], NewGreens.V);
-	_mm_store_si128((__m128i *)&B[0], NewBlues.V);
-#elif (SIMD_WIDTH==8)
-	_mm256_store_si256((__m256i *)&R[0], NewReds.V);
-	_mm256_store_si256((__m256i *)&G[0], NewGreens.V);
-	_mm256_store_si256((__m256i *)&B[0], NewBlues.V);
-#endif
-
-	for (u32 LaneIdx = 0; LaneIdx < SIMD_WIDTH; LaneIdx += 1)
-	{
-		SetPixel(Bitmap, X + LaneIdx, Y,
-			color_u8{u8(R[LaneIdx]), u8(G[LaneIdx]), u8(B[LaneIdx])});
-	}
+	StoreWideS32(BasePixelPtr, NewPixels);
 }
 
 void
