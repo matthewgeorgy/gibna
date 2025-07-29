@@ -496,8 +496,9 @@ ConditionalAssign(s32_4x *Dest,
 				  s32_4x Mask, 
 				  s32_4x Source)
 {
-	Dest->V = _mm_or_si128(_mm_and_si128(Mask.V, Dest->V),
-						  _mm_andnot_si128(Mask.V, Source.V));
+	Dest->V = _mm_blendv_epi8(Source.V, Dest->V, Mask.V);
+	/* Dest->V = _mm_or_si128(_mm_and_si128(Mask.V, Dest->V), */
+	/* 					   _mm_andnot_si128(Mask.V, Source.V)); */
 }
 
 s32_4x
